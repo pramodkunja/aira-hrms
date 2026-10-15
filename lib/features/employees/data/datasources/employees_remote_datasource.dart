@@ -344,12 +344,14 @@ class EmployeesRemoteDataSource {
     );
   }
 
-  // ── Designations filtered by department ID ─────────────────────────────────
+  // ── Designations (Positions) filtered by department (org unit) ID ──────────
+  // The Org Structure positions endpoint has no server-side org_unit filter
+  // (only `branch`), so this fetches the page and filters client-side.
 
-  Future<List<String>> fetchDesignationNames(int deptId) async {
+  Future<List<String>> fetchDesignationNames(String deptId) async {
     final res = await _dio.get(
       ApiConstants.designations,
-      queryParameters: {'department': deptId},
+      queryParameters: {'page_size': 200},
     );
     final raw = _unwrap(res.data);
     final list = raw is List
@@ -359,7 +361,8 @@ class EmployeesRemoteDataSource {
             : <dynamic>[]);
     return list
         .whereType<Map<String, dynamic>>()
-        .map((e) => e['name'] as String? ?? '')
+        .where((e) => e['org_unit'] == deptId)
+        .map((e) => e['title'] as String? ?? '')
         .where((n) => n.isNotEmpty)
         .toList();
   }

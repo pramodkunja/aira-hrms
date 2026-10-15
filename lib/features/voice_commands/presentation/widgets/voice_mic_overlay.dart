@@ -52,7 +52,7 @@ class _VoiceMicOverlayState extends ConsumerState<VoiceMicOverlay> {
   // this value drives the default-position/clamp math below, so if the
   // character's rendered size changes, this must move with it or drags and
   // the default resting spot will disagree with what's actually on screen.
-  static const double _bubbleSize = 96;
+  static const double _bubbleSize = 76;
 
   @override
   Widget build(BuildContext context) {
@@ -213,7 +213,7 @@ class _DraggableMicBubble extends StatefulWidget {
 class _DraggableMicBubbleState extends State<_DraggableMicBubble> {
   // Kept in lockstep with AnimatedVoiceAssistant's own default `size` (see
   // the matching constant/comment in _VoiceMicOverlayState above).
-  static const double _bubbleSize = 96;
+  static const double _bubbleSize = 76;
   static const double _edgeMargin = 8;
   // How much of the bubble hangs off the screen edge while "peeking" (idle,
   // undragged) — enough to read as a character poking in rather than a

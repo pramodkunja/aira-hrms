@@ -9,7 +9,9 @@ import 'package:mobile_app/features/hrms/domain/entities/birthday_entity.dart';
 import 'package:mobile_app/features/hrms/presentation/providers/hrms_providers.dart';
 import 'package:mobile_app/features/leave/domain/entities/leave_entity.dart';
 import 'package:mobile_app/features/leave/presentation/providers/leave_providers.dart';
+import 'package:mobile_app/shared/widgets/app_status_badge.dart';
 import '../widgets/attendance_ring_card.dart';
+import '../widgets/dashboard_header.dart';
 import '../widgets/dashboard_section.dart';
 import '../widgets/quick_access.dart';
 import 'admin_dashboard_view.dart';
@@ -81,6 +83,8 @@ class _GenericDashboardView extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            DashboardHeader(name: user?.fullName ?? '', roleDisplay: user?.roleDisplay ?? ''),
+            const SizedBox(height: 20),
             _WelcomeCard(
               name: user?.fullName ?? '',
               roleDisplay: user?.roleDisplay ?? '',
@@ -328,22 +332,8 @@ class _RequestRow extends StatelessWidget {
 
   const _RequestRow({required this.request});
 
-  // (background, foreground) — mirrors EmployeeCard._StatusBadge's pattern
-  // of a solid *Container fill behind the semantic accent color, rather
-  // than a runtime alpha blend of the accent itself. The blend approach
-  // produces a barely-visible tint in dark mode since AppColors' dark
-  // palette accents are themselves already light/pastel; the *Container
-  // fields are hand-tuned solid fills that don't have that problem.
-  static (Color, Color) _statusColors(String s) => switch (s) {
-        'approved' => (AppColors.successContainer, AppColors.success),
-        'rejected' => (AppColors.errorContainer, AppColors.error),
-        'cancelled' => (AppColors.backgroundMid, AppColors.textSecondary),
-        _ => (AppColors.warningContainer, AppColors.warning), // 'pending', 'l2_pending'
-      };
-
   @override
   Widget build(BuildContext context) {
-    final (bg, sc) = _statusColors(request.status);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -369,18 +359,11 @@ class _RequestRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Container(
+        AppStatusBadge(
+          status: request.status,
+          label: request.status,
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            request.status,
-            style: AppTextStyles.caption
-                .copyWith(color: sc, fontWeight: FontWeight.w600),
-            overflow: TextOverflow.ellipsis,
-          ),
+          textStyle: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w600),
         ),
       ],
     );

@@ -60,10 +60,19 @@ class ApiConstants {
       '/settings/email-template-categories/';
 
   // Settings — Departments / Designations
-  static const String departments = '/departments/';
-  static String departmentDetail(int id) => '/departments/$id/';
-  static const String designations = '/designations/';
-  static String designationDetail(int id) => '/designations/$id/';
+  //
+  // The backend retired the flat Department/Designation models in favor of
+  // a tree-based OrgUnit/Position model (see apps/accounts — OrgUnit has no
+  // hard delete-then-recreate history problem, Positions live inside a unit
+  // rather than a global list). "Departments" here means OrgUnit rows with
+  // is_department_level=true (filtered client-side, same as web's
+  // useDepartmentOptions — the list endpoint returns the whole org tree,
+  // not just department-level units); "Designations" means Positions,
+  // which always belong to one org unit. Matches web's simplification.
+  static const String departments = '/org-structure/units/';
+  static String departmentDetail(String id) => '/org-structure/units/$id/';
+  static const String designations = '/org-structure/positions/';
+  static String designationDetail(String id) => '/org-structure/positions/$id/';
 
   // Settings — Roles & Permissions
   static const String roles = '/roles/';
@@ -82,8 +91,22 @@ class ApiConstants {
   static String settingsDocumentTypeDetail(String typeKey) =>
       '/settings/document-types/$typeKey/';
 
-  // Organisation Chart
-  static const String orgChart = '/org-chart/';
+  // Organisation Chart — the old computed GET /org-chart/ endpoint (single
+  // root + flat department groups) was removed along with Department; the
+  // Org Chart screen now builds its own tree client-side from the same
+  // Org Structure units/positions endpoints as Settings > Depts &
+  // Designations and the web app's /dashboard/org-chart page.
+  static const String orgStructureUnits = '/org-structure/units/';
+  static String orgStructureUnitDetail(String id) => '/org-structure/units/$id/';
+  static const String orgStructurePositions = '/org-structure/positions/';
+  static String orgStructurePositionDetail(String id) => '/org-structure/positions/$id/';
+  static String orgStructurePositionDeactivate(String id) => '/org-structure/positions/$id/deactivate/';
+  static String orgStructurePositionActivate(String id) => '/org-structure/positions/$id/activate/';
+  static String orgStructurePositionPlacements(String id) => '/org-structure/positions/$id/placements/';
+  static String orgStructurePositionPlacementsEnd(String id) => '/org-structure/positions/$id/placements/end/';
+  static String orgStructurePlacementDetail(String id) => '/org-structure/placements/$id/';
+  static const String orgStructureJobTemplates = '/org-structure/job-templates/';
+  static String orgStructureJobTemplateDetail(String id) => '/org-structure/job-templates/$id/';
 
   // Employees
   static const String employees = '/employees/';

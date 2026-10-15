@@ -173,7 +173,10 @@ class _CreditRuleFormSheetState extends State<CreditRuleFormSheet> {
                               inputFormatters: [
                                 FilteringTextInputFormatter.digitsOnly
                               ],
-                              decoration: _dec('Min Service (months)'),
+                              onChanged: (_) =>
+                                  setState(() => _errors.remove('minServiceMonths')),
+                              decoration: _dec('Min Service (months)',
+                                  _errors['minServiceMonths']),
                             ),
                           ),
                         ],

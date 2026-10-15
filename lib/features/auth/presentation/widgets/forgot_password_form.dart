@@ -25,6 +25,7 @@ class _ForgotPasswordFormState extends ConsumerState<ForgotPasswordForm> {
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
   String _currentOtp = '';
+  String? _otpError;
   bool _showPassword = false;
   bool _showConfirm = false;
 
@@ -63,8 +64,19 @@ class _ForgotPasswordFormState extends ConsumerState<ForgotPasswordForm> {
           ForgotPasswordStep.otp => _OtpStep(
               email: state.email ?? '',
               isLoading: state.isLoading,
-              onOtpChanged: (otp) => _currentOtp = otp,
-              onSubmit: () => notifier.verifyOtp(_currentOtp),
+              otpError: _otpError,
+              onOtpChanged: (otp) {
+                _currentOtp = otp;
+                if (_otpError != null) setState(() => _otpError = null);
+              },
+              onSubmit: () {
+                final error = FormValidators.otp(_currentOtp);
+                if (error != null) {
+                  setState(() => _otpError = error);
+                  return;
+                }
+                notifier.verifyOtp(_currentOtp);
+              },
               onResend: () => notifier.sendOtp(state.email ?? ''),
             ),
           ForgotPasswordStep.reset => _ResetStep(
@@ -141,6 +153,7 @@ class _EmailStep extends StatelessWidget {
 class _OtpStep extends StatelessWidget {
   final String email;
   final bool isLoading;
+  final String? otpError;
   final void Function(String) onOtpChanged;
   final VoidCallback onSubmit;
   final VoidCallback onResend;
@@ -148,6 +161,7 @@ class _OtpStep extends StatelessWidget {
   const _OtpStep({
     required this.email,
     required this.isLoading,
+    this.otpError,
     required this.onOtpChanged,
     required this.onSubmit,
     required this.onResend,
@@ -162,6 +176,10 @@ class _OtpStep extends StatelessWidget {
             style: AppTextStyles.bodySecondary),
         const SizedBox(height: 24),
         OtpInputWidget(onCompleted: onOtpChanged, onChanged: onOtpChanged),
+        if (otpError != null) ...[
+          const SizedBox(height: 8),
+          Text(otpError!, style: AppTextStyles.bodySmall.copyWith(color: AppColors.error)),
+        ],
         const SizedBox(height: 24),
         AppButton(label: 'Verify OTP', onPressed: isLoading ? null : onSubmit, isLoading: isLoading),
         const SizedBox(height: 12),

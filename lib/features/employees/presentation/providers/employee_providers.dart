@@ -248,7 +248,10 @@ final employeeStatsProvider = FutureProvider.autoDispose<EmployeeStats>((ref) as
     total: counts.total,
     active: counts.active,
     onboarding: counts.onboarding,
-    departments: departments.where((d) => d.employeeCount > 0).length,
+    // OrgUnit doesn't expose a per-department employee count — active
+    // department count is the closest available proxy (was "departments
+    // actually used by an employee", now "departments currently in use").
+    departments: departments.where((d) => d.isActive).length,
   );
 });
 
@@ -362,7 +365,7 @@ final employeeBranchesProvider =
 
 // Designations filtered by department ID
 final employeeDesignationsByDeptProvider =
-    FutureProvider.autoDispose.family<List<String>, int>((ref, deptId) {
+    FutureProvider.autoDispose.family<List<String>, String>((ref, deptId) {
   return ref.read(employeesDataSourceProvider).fetchDesignationNames(deptId);
 });
 

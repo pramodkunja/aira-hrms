@@ -337,8 +337,14 @@ class AssessmentFormData {
     if (maxAttempts != null && maxAttempts! < 0) {
       return 'Max Attempts cannot be negative. Use 0 for unlimited.';
     }
+    if (maxAttempts != null && maxAttempts! > 100) {
+      return 'Max Attempts must be 100 or fewer.';
+    }
     if (timeLimitMins != null && timeLimitMins! < 1) {
       return 'Time Limit must be at least 1 minute.';
+    }
+    if (timeLimitMins != null && timeLimitMins! > 1440) {
+      return 'Time Limit must be 1440 minutes (24 hours) or fewer.';
     }
     return null;
   }

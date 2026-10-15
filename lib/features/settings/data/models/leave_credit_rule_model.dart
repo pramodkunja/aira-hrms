@@ -179,6 +179,9 @@ class CreditRuleFormData {
     if (encashable && encashLimit < 1) {
       errors['encashLimit'] = 'Encash limit must be at least 1.';
     }
+    if (minServiceMonths < 0) {
+      errors['minServiceMonths'] = 'Min service months cannot be negative.';
+    }
     return errors;
   }
 }

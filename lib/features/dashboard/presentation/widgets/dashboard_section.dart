@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_app/core/theme/app_colors.dart';
 import 'package:mobile_app/core/theme/app_text_styles.dart';
+import 'package:mobile_app/shared/widgets/app_avatar.dart';
+import 'package:mobile_app/shared/widgets/app_card.dart';
+import 'package:mobile_app/shared/widgets/app_skeleton.dart';
 
 /// A fixed-size, centered image icon — used wherever a dashboard card needs
 /// an asset (PNG) icon instead of a Material [Icon]. Sized via an explicit
@@ -52,13 +55,8 @@ class SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppColors.cardShadow,
-      ),
+    return AppCard(
+      padding: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,12 +67,12 @@ class SectionCard extends StatelessWidget {
               children: [
                 iconWidget ?? Icon(icon, size: 19, color: accentColor),
                 const SizedBox(width: 8),
-                Expanded(child: Text(title, style: AppTextStyles.h4)),
+                Expanded(child: Text(title, style: AppTextStyles.sectionTitle)),
                 if (trailing != null) trailing!,
               ],
             ),
           ),
-          Divider(height: 1, thickness: 1, color: AppColors.border),
+          Divider(height: 1, thickness: 1, color: AppColors.divider),
           Padding(
             padding: const EdgeInsets.all(16),
             child: child,
@@ -105,7 +103,7 @@ class SectionMessage extends StatelessWidget {
     // shimmering skeleton here means every one of those ~26 loading
     // branches gets it for free, with no call site needing to change.
     if (label == 'Loading…') {
-      return const _SectionSkeleton();
+      return const AppSkeleton();
     }
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -126,86 +124,6 @@ class SectionMessage extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// A generic 2-row shimmer placeholder — approximates the icon-chip + two
-/// text lines shape most dashboard cards actually render once loaded
-/// (ActionRow, BarRow, birthday/lifecycle rows) closely enough to read as
-/// "this card's content is on its way" rather than a full-screen-style
-/// generic grey rectangle.
-class _SectionSkeleton extends StatefulWidget {
-  const _SectionSkeleton();
-
-  @override
-  State<_SectionSkeleton> createState() => _SectionSkeletonState();
-}
-
-class _SectionSkeletonState extends State<_SectionSkeleton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 900),
-  )..repeat(reverse: true);
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        final opacity = 0.35 + (_controller.value * 0.35);
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Column(
-            children: [
-              _skeletonRow(opacity, secondLineWidth: 110),
-              const SizedBox(height: 14),
-              _skeletonRow(opacity, secondLineWidth: 70),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _skeletonRow(double opacity, {required double secondLineWidth}) {
-    Widget bar({double? width, required double height}) => Opacity(
-          opacity: opacity,
-          child: Container(
-            width: width,
-            height: height,
-            decoration: BoxDecoration(
-              color: AppColors.backgroundMid,
-              borderRadius: BorderRadius.circular(height / 2),
-            ),
-          ),
-        );
-
-    return Row(
-      children: [
-        bar(width: 36, height: 36),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              bar(width: double.infinity, height: 12),
-              const SizedBox(height: 6),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: bar(width: secondLineWidth, height: 10),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }
@@ -322,18 +240,13 @@ class KpiGrid extends StatelessWidget {
   }
 }
 
-/// Initials for an avatar chip — "Jane Doe" -> "JD", a single name -> its
-/// first letter, empty -> "?". Shared by every role's console/lifecycle/
-/// birthday rows so avatar initials are computed identically everywhere.
-String initialsOf(String name) {
-  final parts = name.trim().split(RegExp(r'\s+'));
-  if (name.isEmpty) return '?';
-  if (parts.length == 1) return parts[0][0].toUpperCase();
-  return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
-}
-
 /// A circular initials avatar — used anywhere a dashboard row would show a
 /// real employee photo if this app had one (lifecycle rows, birthdays).
+///
+/// Thin wrapper kept under its original name (referenced across the Admin/
+/// HR/generic dashboard views) around the app-wide [AppAvatar] — see that
+/// class for [initialsOf] and the canonical avatar implementation this now
+/// delegates to.
 class InitialsAvatar extends StatelessWidget {
   final String name;
   final double radius;
@@ -348,14 +261,7 @@ class InitialsAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor: backgroundColor,
-      child: Text(
-        initialsOf(name),
-        style: AppTextStyles.labelSmall.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
-      ),
-    );
+    return AppAvatar(name: name, radius: radius, backgroundColor: backgroundColor);
   }
 }
 
@@ -454,6 +360,9 @@ class HeroGlow extends StatelessWidget {
 /// Avatar with a colored status ring (green while [active], dim otherwise)
 /// plus a small overlapping "verified" badge — reads as a proper identity
 /// component rather than a plain circle of initials.
+///
+/// Thin wrapper (kept under its original name — every role's console header
+/// references it) around [AppAvatar]'s ring/badge support.
 class StatusRingAvatar extends StatelessWidget {
   final String name;
   final bool active;
@@ -462,50 +371,7 @@ class StatusRingAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 60,
-      height: 60,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            padding: const EdgeInsets.all(2.5),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: active ? const Color(0xFF4ADE80) : Colors.white.withValues(alpha: 0.35),
-                width: 2,
-              ),
-            ),
-            child: Container(
-              decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.18)),
-              child: Center(
-                child: Text(
-                  initialsOf(name),
-                  style: AppTextStyles.h4.copyWith(color: Colors.white, fontWeight: FontWeight.w800),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            right: -2,
-            bottom: -2,
-            child: Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFFFDE68A),
-                border: Border.all(color: const Color(0xFF6366F1), width: 2),
-              ),
-              child: const Icon(Icons.verified, size: 11, color: Color(0xFF6366F1)),
-            ),
-          ),
-        ],
-      ),
-    );
+    return AppAvatar(name: name, radius: 30, activeRing: active, verifiedBadge: true);
   }
 }
 

@@ -19,7 +19,7 @@ class DepartmentsScreen extends ConsumerStatefulWidget {
 }
 
 class _DepartmentsScreenState extends ConsumerState<DepartmentsScreen> {
-  int? _selectedDeptId;
+  String? _selectedDeptId;
   final _searchCtrl = TextEditingController();
   String _query = '';
 
@@ -47,7 +47,10 @@ class _DepartmentsScreenState extends ConsumerState<DepartmentsScreen> {
       ),
       body: deptsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => _ErrorView(message: e.toString()),
+        error: (e, _) => _ErrorView(
+          message: friendlySettingsError(e),
+          onRetry: () => ref.invalidate(departmentsProvider),
+        ),
         data: (depts) => _Body(
           depts: depts,
           query: _query,
@@ -81,7 +84,7 @@ class _DepartmentsScreenState extends ConsumerState<DepartmentsScreen> {
   }
 
   Future<void> _openDesigEdit(DesignationModel? desig,
-      {int? defaultDeptId}) async {
+      {String? defaultDeptId}) async {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -123,12 +126,12 @@ class _Body extends ConsumerWidget {
   final List<DepartmentModel> depts;
   final String query;
   final TextEditingController searchCtrl;
-  final int? selectedDeptId;
+  final String? selectedDeptId;
   final ValueChanged<String> onQueryChanged;
-  final ValueChanged<int> onSelectDept;
+  final ValueChanged<String> onSelectDept;
   final ValueChanged<DepartmentModel?> onEditDept;
   final ValueChanged<DepartmentModel> onDeleteDept;
-  final ValueChanged<int> onAddDesig;
+  final ValueChanged<String> onAddDesig;
   final ValueChanged<DesignationModel> onEditDesig;
   final ValueChanged<DesignationModel> onDeleteDesig;
 
@@ -342,7 +345,8 @@ class _EmptyView extends StatelessWidget {
 
 class _ErrorView extends StatelessWidget {
   final String message;
-  const _ErrorView({required this.message});
+  final VoidCallback? onRetry;
+  const _ErrorView({required this.message, this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -359,6 +363,14 @@ class _ErrorView extends StatelessWidget {
             Text(message,
                 style: AppTextStyles.bodySecondary,
                 textAlign: TextAlign.center),
+            if (onRetry != null) ...[
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh, size: 16),
+                label: const Text('Retry'),
+              ),
+            ],
           ],
         ),
       ),
@@ -371,18 +383,18 @@ class _ErrorView extends StatelessWidget {
 Future<bool> _showDeleteDialog(BuildContext context, String name) async {
   final result = await showDialog<bool>(
     context: context,
-    builder: (_) => AlertDialog(
+    builder: (dialogContext) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       title: const Text('Confirm Delete'),
       content: Text('Delete "$name"? This cannot be undone.'),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context, false),
+          onPressed: () => Navigator.pop(dialogContext, false),
           child: const Text('Cancel'),
         ),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-          onPressed: () => Navigator.pop(context, true),
+          onPressed: () => Navigator.pop(dialogContext, true),
           child: const Text('Delete'),
         ),
       ],

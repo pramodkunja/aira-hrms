@@ -5,7 +5,6 @@ import '../../../data/models/company_model.dart';
 
 // ── Validators ────────────────────────────────────────────────────────────────
 
-final _gstinRe = RegExp(r'^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z1-9]Z[A-Z\d]$');
 final _panRe   = RegExp(r'^[A-Z]{5}\d{4}[A-Z]$');
 final _cinRe   = RegExp(r'^[UL]\d{5}[A-Z]{2}\d{4}[A-Z]{3}\d{6}$');
 final _tanRe   = RegExp(r'^[A-Z]{4}\d{5}[A-Z]$');
@@ -32,7 +31,6 @@ class CompanyFormFields extends StatefulWidget {
 class _CompanyFormFieldsState extends State<CompanyFormFields> {
   late final TextEditingController _name      = _ctrl(widget.company.companyName);
   late final TextEditingController _trade     = _ctrl(widget.company.tradeName);
-  late final TextEditingController _gstin     = _ctrl(widget.company.gstin);
   late final TextEditingController _cin       = _ctrl(widget.company.cin);
   late final TextEditingController _pan       = _ctrl(widget.company.pan);
   late final TextEditingController _tan       = _ctrl(widget.company.tan);
@@ -54,7 +52,6 @@ class _CompanyFormFieldsState extends State<CompanyFormFields> {
   CompanyModel _current() => widget.company.copyWith(
     companyName:   _name.text,
     tradeName:     _trade.text,
-    gstin:         _gstin.text.toUpperCase(),
     cin:           _cin.text.toUpperCase(),
     pan:           _pan.text.toUpperCase(),
     tan:           _tan.text.toUpperCase(),
@@ -70,7 +67,7 @@ class _CompanyFormFieldsState extends State<CompanyFormFields> {
 
   @override
   void dispose() {
-    for (final c in [_name, _trade, _gstin, _cin, _pan, _tan, _address, _city, _pin, _website, _phone]) {
+    for (final c in [_name, _trade, _cin, _pan, _tan, _address, _city, _pin, _website, _phone]) {
       c.dispose();
     }
     super.dispose();
@@ -96,9 +93,6 @@ class _CompanyFormFieldsState extends State<CompanyFormFields> {
           title: 'Registration Numbers',
           color: const Color(0xFF9C5700),
           children: [
-            _field(_gstin, 'GSTIN *',
-                validator: (v) => _regexVal(v, _gstinRe, 'Enter a valid 15-character GSTIN'),
-                hint: 'e.g. 27AAPFU0939F1ZV'),
             _field(_cin, 'CIN *',
                 validator: (v) => _regexVal(v, _cinRe, 'Enter a valid CIN'),
                 hint: 'e.g. U74999MH2020PTC123456'),

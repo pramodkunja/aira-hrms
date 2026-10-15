@@ -50,27 +50,30 @@ class _SeparationClearanceSectionState
     final ctrl = TextEditingController();
     final remarks = await showDialog<String>(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Reject ${c.clearanceTypeDisplay}', style: AppTextStyles.label),
-        content: TextField(
-          controller: ctrl,
-          maxLines: 3,
-          maxLength: 300,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: 'Remarks (required)…'),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            onPressed: ctrl.text.trim().isEmpty
-                ? null
-                : () => Navigator.pop(context, ctrl.text.trim()),
-            child: const Text('Confirm Reject'),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('Reject ${c.clearanceTypeDisplay}', style: AppTextStyles.label),
+          content: TextField(
+            controller: ctrl,
+            maxLines: 3,
+            maxLength: 300,
+            autofocus: true,
+            onChanged: (_) => setDialogState(() {}),
+            decoration: const InputDecoration(hintText: 'Remarks (required)…'),
           ),
-        ],
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+              onPressed: ctrl.text.trim().isEmpty
+                  ? null
+                  : () => Navigator.pop(dialogContext, ctrl.text.trim()),
+              child: const Text('Confirm Reject'),
+            ),
+          ],
+        ),
       ),
     );
     if (remarks == null || remarks.isEmpty || !mounted) return;

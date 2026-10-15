@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -152,8 +153,8 @@ class _SeparationFormSheetState extends ConsumerState<SeparationFormSheet> {
       return;
     }
     final notice = int.tryParse(_noticeCtrl.text.trim());
-    if (notice == null || notice < 0) {
-      setState(() => _error = 'Enter a valid number of days.');
+    if (notice == null || notice < 0 || notice > 365) {
+      setState(() => _error = 'Enter a valid number of notice days (0-365).');
       return;
     }
 
@@ -358,6 +359,10 @@ class _SeparationFormSheetState extends ConsumerState<SeparationFormSheet> {
                           label: 'Notice Period (days) *',
                           controller: _noticeCtrl,
                           keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(3),
+                          ],
                         ),
                         const SizedBox(height: 14),
 

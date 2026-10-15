@@ -1,6 +1,89 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+
+/// Circular profile photo with an edit/camera badge overlay and a busy
+/// spinner state — extracted from what used to be inlined directly in
+/// ProfilePersonalSection so ProfileSummaryCard can reuse the exact same
+/// avatar+photo-picker visual. Purely presentational: the caller (which
+/// still owns all image_picker/upload logic) supplies [onTap] and [busy].
+class ProfileAvatar extends StatelessWidget {
+  final String? photoUrl;
+  final String initials;
+  final Color color;
+  final double radius;
+  final bool busy;
+  final VoidCallback? onTap;
+  final Color? badgeColor;
+
+  const ProfileAvatar({
+    super.key,
+    required this.photoUrl,
+    required this.initials,
+    required this.color,
+    this.radius = 30,
+    this.busy = false,
+    this.onTap,
+    this.badgeColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasPhoto = (photoUrl ?? '').isNotEmpty;
+    return GestureDetector(
+      onTap: busy ? null : onTap,
+      child: Stack(
+        children: [
+          CircleAvatar(
+            radius: radius,
+            backgroundColor: color,
+            backgroundImage: hasPhoto ? NetworkImage(photoUrl!) : null,
+            child: hasPhoto
+                ? null
+                : Text(
+                    initials,
+                    style: AppTextStyles.h3.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+          ),
+          if (busy)
+            Positioned.fill(
+              child: CircleAvatar(
+                radius: radius,
+                backgroundColor: Colors.black.withValues(alpha: 0.4),
+                child: const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                  ),
+                ),
+              ),
+            )
+          else if (onTap != null)
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: badgeColor ?? AppColors.primary,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: const Icon(Icons.camera_alt, size: 12, color: Colors.white),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
 
 /// Card section with icon + title header and divider.
 class ProfileSectionCard extends StatelessWidget {
@@ -73,6 +156,9 @@ class ProfileField extends StatelessWidget {
   final bool obscureText;
   final TextInputType? keyboardType;
   final int maxLines;
+  final List<TextInputFormatter>? inputFormatters;
+  final void Function(String)? onChanged;
+  final String? errorText;
   const ProfileField({
     super.key,
     required this.label,
@@ -81,6 +167,9 @@ class ProfileField extends StatelessWidget {
     this.obscureText = false,
     this.keyboardType,
     this.maxLines = 1,
+    this.inputFormatters,
+    this.onChanged,
+    this.errorText,
   });
 
   @override
@@ -96,14 +185,17 @@ class ProfileField extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        TextField(
+        TextFormField(
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,
           maxLines: obscureText ? 1 : maxLines,
+          inputFormatters: inputFormatters,
+          onChanged: onChanged,
           style: AppTextStyles.bodySmall.copyWith(color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: hint,
+            errorText: errorText,
             hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.textHint),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 11),

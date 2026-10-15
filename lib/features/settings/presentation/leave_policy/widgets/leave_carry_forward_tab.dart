@@ -107,7 +107,7 @@ class _LeaveCarryForwardTabState extends ConsumerState<LeaveCarryForwardTab> {
     setState(() => _runError = null);
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         title: Row(children: [
           Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 20),
@@ -122,7 +122,7 @@ class _LeaveCarryForwardTabState extends ConsumerState<LeaveCarryForwardTab> {
         ),
         actions: [
           TextButton(
-            onPressed: _running ? null : () => Navigator.pop(context),
+            onPressed: _running ? null : () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           FilledButton(

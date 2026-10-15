@@ -33,7 +33,7 @@ class AnimatedVoiceAssistant extends StatefulWidget {
     this.isSpeaking = false,
     this.isThinking = false,
     this.message,
-    this.size = 96,
+    this.size = 76,
   });
 
   @override

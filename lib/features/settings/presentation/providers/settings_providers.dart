@@ -316,7 +316,7 @@ class DepartmentsNotifier extends AutoDisposeAsyncNotifier<List<DepartmentModel>
     }
   }
 
-  Future<String?> editDept(int id, DeptFormData form) async {
+  Future<String?> editDept(String id, DeptFormData form) async {
     try {
       final updated = await _ds.updateDepartment(id, form);
       state = AsyncData(
@@ -328,7 +328,7 @@ class DepartmentsNotifier extends AutoDisposeAsyncNotifier<List<DepartmentModel>
     }
   }
 
-  Future<String?> removeDept(int id) async {
+  Future<String?> removeDept(String id) async {
     try {
       await _ds.deleteDepartment(id);
       state = AsyncData(
@@ -363,7 +363,7 @@ class DesignationsNotifier
     }
   }
 
-  Future<String?> editDesig(int id, DesignationFormData form) async {
+  Future<String?> editDesig(String id, DesignationFormData form) async {
     try {
       final updated = await _ds.updateDesignation(id, form);
       state = AsyncData(
@@ -375,7 +375,7 @@ class DesignationsNotifier
     }
   }
 
-  Future<String?> removeDesig(int id) async {
+  Future<String?> removeDesig(String id) async {
     try {
       await _ds.deleteDesignation(id);
       state = AsyncData(

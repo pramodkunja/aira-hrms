@@ -788,7 +788,11 @@ Future<void> _reprocessAttendance(BuildContext context, WidgetRef ref) async {
   final iso = _isoDate(date);
   final confirmed = await showDialog<bool>(
     context: context,
-    builder: (_) => AlertDialog(
+    // Must use the builder's own context, not the enclosing screen's —
+    // popping with the screen's context resolves to GoRouter's root
+    // Navigator and pops the current page/route instead of the dialog
+    // (see my_attendance_screen.dart's _showDayDetail for the same fix).
+    builder: (dialogContext) => AlertDialog(
       title: const Text('Reprocess Attendance'),
       content: Text(
         'Recalculate attendance for $iso from all recorded punches? This '
@@ -796,10 +800,10 @@ Future<void> _reprocessAttendance(BuildContext context, WidgetRef ref) async {
       ),
       actions: [
         TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Cancel')),
         ElevatedButton(
-          onPressed: () => Navigator.pop(context, true),
+          onPressed: () => Navigator.pop(dialogContext, true),
           style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white),

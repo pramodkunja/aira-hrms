@@ -391,7 +391,7 @@ class EmployeeFormData {
   String email;
   String phone;
   dynamic roleId;
-  int? departmentId;
+  String? departmentId;
   String department;
   String designation;
   String branch;
@@ -412,16 +412,15 @@ class EmployeeFormData {
     this.dateOfJoining = '',
   });
 
-  static final RegExp _emailRe = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-
   Map<String, String> validate() {
     final errors = <String, String>{};
     if (firstName.trim().isEmpty) errors['first_name'] = 'First name is required.';
     if (lastName.trim().isEmpty)  errors['last_name'] = 'Last name is required.';
     if (email.trim().isEmpty) {
       errors['email'] = 'Work email is required.';
-    } else if (!_emailRe.hasMatch(email.trim())) {
-      errors['email'] = 'Enter a valid email address.';
+    } else {
+      final emailError = FormValidators.email(email);
+      if (emailError != null) errors['email'] = emailError;
     }
     // Mirrors EmployeeListCreateView.post's _is_valid_phone: optional field,
     // but if provided it must be exactly 10 digits (spaces/-/()/./ stripped
@@ -466,7 +465,7 @@ class EmployeeUpdateFormData {
   String fullName;
   String phone;
   String role; // Role.name slug, e.g. 'hr_admin' — NOT the role id
-  int? departmentId;
+  String? departmentId;
   String department;
   String designation;
   String branch;

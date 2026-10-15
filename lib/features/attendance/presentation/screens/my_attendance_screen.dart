@@ -5,8 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/location/location_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/device_identifier.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_card.dart';
+import '../../../../shared/widgets/app_status_badge.dart';
 import '../../../../shared/widgets/stat_card.dart';
 import '../../../dashboard/presentation/widgets/dashboard_section.dart';
 import '../../domain/entities/attendance_entity.dart';
@@ -87,66 +91,70 @@ class _MyAttendanceScreenState extends ConsumerState<MyAttendanceScreen>
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('My Attendance', style: AppTextStyles.h2),
+              Text('My Attendance', style: AppTextStyles.screenTitle),
               const SizedBox(height: 2),
               Text(
                 'Clock in/out and view your personal attendance calendar',
-                style: AppTextStyles.bodySmall
-                    .copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.cardSubtitle,
               ),
             ],
           ),
         ),
-        const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            border: Border(bottom: BorderSide(color: AppColors.border)),
-          ),
-          child: TabBar(
-            controller: _tabController,
-            // Evenly-split tabs (the TabBar default) don't leave "Attendance
-            // Corrections" (icon + text) enough width on a phone screen —
-            // isScrollable sizes each tab to its own content instead, which
-            // also matches the screenshot's layout (tabs hug their content
-            // with room left over, not stretched to fill the row).
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            indicatorColor: AppColors.primary,
-            indicatorSize: TabBarIndicatorSize.label,
-            labelColor: AppColors.primary,
-            unselectedLabelColor: AppColors.textPrimary,
-            labelPadding: const EdgeInsets.symmetric(horizontal: 16),
-            labelStyle:
-                AppTextStyles.label.copyWith(fontWeight: FontWeight.w700),
-            unselectedLabelStyle:
-                AppTextStyles.label.copyWith(fontWeight: FontWeight.w600),
-            tabs: const [
-              Tab(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.event_note_outlined, size: 16),
-                    SizedBox(width: 6),
-                    Text('Attendance'),
-                  ],
-                ),
+        const SizedBox(height: AppSpacing.md),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: AppColors.backgroundMid,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              // A soft rounded-pill selected indicator (matching the
+              // reference's rounded-button language) instead of a plain
+              // underline — same TabController/TabBarView underneath.
+              isScrollable: false,
+              indicator: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                boxShadow: AppColors.cardShadow,
               ),
-              Tab(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.history_outlined, size: 16),
-                    SizedBox(width: 6),
-                    Text('Attendance Corrections'),
-                  ],
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              labelColor: AppColors.primary,
+              unselectedLabelColor: AppColors.textSecondary,
+              labelStyle: AppTextStyles.label.copyWith(fontWeight: FontWeight.w700),
+              unselectedLabelStyle: AppTextStyles.label.copyWith(fontWeight: FontWeight.w600),
+              tabs: const [
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.event_note_outlined, size: 15),
+                      SizedBox(width: 6),
+                      Flexible(child: Text('Attendance', overflow: TextOverflow.ellipsis)),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.history_outlined, size: 15),
+                      SizedBox(width: 6),
+                      Flexible(child: Text('Corrections', overflow: TextOverflow.ellipsis)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         Expanded(
@@ -268,13 +276,8 @@ class _MyAttendanceScreenState extends ConsumerState<MyAttendanceScreen>
   Widget _buildMonthlySummary() {
     final summaryAsync = ref.watch(attendanceSummaryProvider(_calKey));
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
+    return AppCard(
+      radius: AppRadius.large,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -282,50 +285,56 @@ class _MyAttendanceScreenState extends ConsumerState<MyAttendanceScreen>
             children: [
               Icon(Icons.calendar_month_outlined,
                   size: 18, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Text('Monthly Summary', style: AppTextStyles.h4),
+              const SizedBox(width: AppSpacing.sm),
+              Text('Monthly Summary', style: AppTextStyles.sectionTitle),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.md),
           summaryAsync.when(
             data: (summary) {
+              // Same 6 real fields as before — just a 2-column grid (was 3)
+              // so each solid-color tile has room to match the reference's
+              // proportions.
               final cells = [
                 _SummaryCell(
                     label: 'Working Days',
                     value: '${summary.workingDays}',
-                    color: AppColors.primary),
+                    color: AppColors.accentNavy,
+                    icon: Icons.calendar_month_outlined),
                 _SummaryCell(
                     label: 'Days Present',
                     value: '${summary.daysPresent}',
-                    color: AppColors.success),
+                    color: AppColors.success,
+                    icon: Icons.event_available_outlined),
                 _SummaryCell(
                     label: 'Days Absent',
                     value: '${summary.daysAbsent}',
-                    color: AppColors.error),
+                    color: AppColors.error,
+                    icon: Icons.event_busy_outlined),
                 _SummaryCell(
                     label: 'Leave Days',
                     value: '${summary.leaveDays}',
-                    color: AppColors.warning),
+                    color: AppColors.warning,
+                    icon: Icons.beach_access_outlined),
                 _SummaryCell(
                     label: 'Half Days',
                     value: '${summary.halfDays}',
-                    color: AppColors.info),
+                    color: AppColors.info,
+                    icon: Icons.brightness_medium_outlined),
                 _SummaryCell(
                     label: 'OT Hours',
                     value: summary.otHours,
-                    color: AppColors.success),
+                    color: AppColors.accentPurple,
+                    icon: Icons.more_time_outlined),
               ];
-              // Fixed mainAxisExtent (not childAspectRatio) so cell height
-              // never depends on column width — narrower screens no longer
-              // squeeze the label + value text below the space it needs.
               return GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  mainAxisExtent: 72,
+                  crossAxisCount: 2,
+                  mainAxisSpacing: AppSpacing.md,
+                  crossAxisSpacing: AppSpacing.md,
+                  mainAxisExtent: 76,
                 ),
                 itemCount: cells.length,
                 itemBuilder: (_, i) => cells[i],
@@ -358,12 +367,10 @@ class _MyAttendanceScreenState extends ConsumerState<MyAttendanceScreen>
     final firstWd = DateTime(_calMonth.year, _calMonth.month, 1).weekday % 7;
     final today = DateTime.now();
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
+    return AppCard(
+      padding: EdgeInsets.zero,
+      radius: AppRadius.large,
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           // Calendar / History tab switcher — mirrors web's CalendarAndHistory.
@@ -408,41 +415,31 @@ class _MyAttendanceScreenState extends ConsumerState<MyAttendanceScreen>
             ),
 
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
             child: Row(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left, size: 22),
-                  onPressed: () => setState(() {
-                    _calMonth =
-                        DateTime(_calMonth.year, _calMonth.month - 1, 1);
+                _MonthNavButton(
+                  icon: Icons.chevron_left,
+                  enabled: true,
+                  onTap: () => setState(() {
+                    _calMonth = DateTime(_calMonth.year, _calMonth.month - 1, 1);
                   }),
-                  color: AppColors.textSecondary,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
                 ),
                 Expanded(
                   child: Center(
                     child: Text(
                       '${_monthNames[_calMonth.month - 1]} ${_calMonth.year}',
-                      style: AppTextStyles.labelLarge,
+                      style: AppTextStyles.cardTitle,
                     ),
                   ),
                 ),
-                IconButton(
+                _MonthNavButton(
                   // Matches web: cannot navigate the calendar into future months.
-                  icon: const Icon(Icons.chevron_right, size: 22),
-                  onPressed: _isCurrentCalendarMonth
-                      ? null
-                      : () => setState(() {
-                            _calMonth = DateTime(
-                                _calMonth.year, _calMonth.month + 1, 1);
-                          }),
-                  color: _isCurrentCalendarMonth
-                      ? AppColors.textHint.withValues(alpha: 0.4)
-                      : AppColors.textSecondary,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+                  icon: Icons.chevron_right,
+                  enabled: !_isCurrentCalendarMonth,
+                  onTap: () => setState(() {
+                    _calMonth = DateTime(_calMonth.year, _calMonth.month + 1, 1);
+                  }),
                 ),
               ],
             ),
@@ -494,48 +491,43 @@ class _MyAttendanceScreenState extends ConsumerState<MyAttendanceScreen>
                         ? _dayStatusColors[dayRecord.status]
                         : null;
 
+                    // A solid-filled circle for any day with a status (today
+                    // stays solid primary, as before) — matches the
+                    // reference's fully-colored day cells. Same tap-to-detail
+                    // behavior, same 8 real statuses/colors as before this
+                    // restyle; only the "15%-tint + separate dot" look is
+                    // replaced by one bigger, solid circle.
                     return GestureDetector(
                       onTap: dayRecord == null
                           ? null
                           : () => _showDayDetail(day, dayRecord),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 30,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isToday
-                                  ? AppColors.primary
-                                  : dotColor != null
-                                      ? dotColor.withValues(alpha: 0.15)
-                                      : Colors.transparent,
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              '$day',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: isToday || dotColor != null
-                                    ? FontWeight.w700
-                                    : FontWeight.w400,
-                                color: isToday
-                                    ? Colors.white
-                                    : dotColor ?? AppColors.textPrimary,
-                              ),
+                      child: Center(
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isToday
+                                ? AppColors.primary
+                                : dotColor ?? Colors.transparent,
+                            border: dotColor == null && !isToday
+                                ? Border.all(color: AppColors.border)
+                                : null,
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '$day',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: isToday || dotColor != null
+                                  ? FontWeight.w700
+                                  : FontWeight.w400,
+                              color: isToday || dotColor != null
+                                  ? Colors.white
+                                  : AppColors.textPrimary,
                             ),
                           ),
-                          if (dotColor != null) ...[
-                            const SizedBox(height: 2),
-                            Container(
-                              width: 5,
-                              height: 5,
-                              decoration: BoxDecoration(
-                                  shape: BoxShape.circle, color: dotColor),
-                            ),
-                          ],
-                        ],
+                        ),
                       ),
                     );
                   },
@@ -873,7 +865,7 @@ class _ClockPanelState extends ConsumerState<_ClockPanel>
                       enabled: !_punching,
                       offset: const Offset(0, 44),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                          borderRadius: BorderRadius.circular(AppRadius.medium)),
                       constraints: const BoxConstraints(minWidth: 200),
                       onSelected: (v) => setState(() => _attendanceMode = v),
                       itemBuilder: (_) =>
@@ -915,10 +907,10 @@ class _ClockPanelState extends ConsumerState<_ClockPanel>
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
+                            horizontal: AppSpacing.md, vertical: AppSpacing.md),
                         decoration: BoxDecoration(
                           color: AppColors.backgroundMid,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                           border: Border.all(color: AppColors.border),
                         ),
                         child: Row(
@@ -959,7 +951,7 @@ class _ClockPanelState extends ConsumerState<_ClockPanel>
                               .withValues(alpha: 0.6),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(AppRadius.medium)),
                           elevation: 0,
                         ),
                         child: _punching
@@ -1241,7 +1233,7 @@ class _MyCorrectionsBody extends StatelessWidget {
                     BorderSide(color: AppColors.primary.withValues(alpha: 0.4)),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                    borderRadius: BorderRadius.circular(AppRadius.medium)),
               ),
             ),
           ),
@@ -1267,6 +1259,8 @@ class _MyCorrectionsBody extends StatelessWidget {
   }
 }
 
+// Same solid-color stat-tile language as _SummaryCell, for visual
+// consistency within this one screen.
 class _CorrectionCountTile extends StatelessWidget {
   final String label;
   final int count;
@@ -1277,20 +1271,18 @@ class _CorrectionCountTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(10),
+        color: color,
+        borderRadius: BorderRadius.circular(AppRadius.medium),
       ),
       child: Column(
         children: [
           Text('$count',
-              style: AppTextStyles.h3
-                  .copyWith(color: color, fontWeight: FontWeight.w800)),
+              style: AppTextStyles.h3.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
           const SizedBox(height: 2),
           Text(label,
-              style: AppTextStyles.labelSmall
-                  .copyWith(color: AppColors.textSecondary)),
+              style: AppTextStyles.labelSmall.copyWith(color: Colors.white.withValues(alpha: 0.9))),
         ],
       ),
     );
@@ -1317,14 +1309,14 @@ class _MyCorrectionRow extends StatelessWidget {
     final displayStatus = _myCorrectionDisplayStatus(record.status);
 
     return InkWell(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(AppRadius.medium),
       onTap: () => _showMyCorrectionDetail(context, record),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.backgroundMid,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           border: Border.all(color: AppColors.border),
         ),
         child: Column(
@@ -1337,18 +1329,15 @@ class _MyCorrectionRow extends StatelessWidget {
                       style: AppTextStyles.label
                           .copyWith(fontWeight: FontWeight.w700)),
                 ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: _myCorrectionStatusColor(displayStatus)
-                        .withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
+                AppStatusBadge(
+                  status: displayStatus,
+                  label: _myCorrectionStatusLabel(displayStatus),
+                  colorsFor: (_) => (
+                    _myCorrectionStatusColor(displayStatus).withValues(alpha: 0.12),
+                    _myCorrectionStatusColor(displayStatus),
                   ),
-                  child: Text(_myCorrectionStatusLabel(displayStatus),
-                      style: AppTextStyles.labelSmall.copyWith(
-                          color: _myCorrectionStatusColor(displayStatus),
-                          fontWeight: FontWeight.w600)),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  textStyle: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -1467,19 +1456,15 @@ class _MyCorrectionDetailSheet extends StatelessWidget {
                               .copyWith(fontWeight: FontWeight.w700)),
                     ],
                   ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _myCorrectionStatusColor(displayStatus)
-                          .withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(20),
+                  AppStatusBadge(
+                    status: displayStatus,
+                    label: _myCorrectionStatusLabel(displayStatus),
+                    colorsFor: (_) => (
+                      _myCorrectionStatusColor(displayStatus).withValues(alpha: 0.12),
+                      _myCorrectionStatusColor(displayStatus),
                     ),
-                    child: Text(_myCorrectionStatusLabel(displayStatus),
-                        style: TextStyle(
-                            color: _myCorrectionStatusColor(displayStatus),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
                   ),
                 ],
               ),
@@ -1614,33 +1599,59 @@ class _DetailRow extends StatelessWidget {
       );
 }
 
+// A solid-color stat tile (icon chip + bold value + label) — matches the
+// reference Timesheet screenshot's colorful summary-tile grid. Same 6 real
+// MonthlySummaryEntity fields as before this restyle, just a different shell.
 class _SummaryCell extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
-  const _SummaryCell(
-      {required this.label, required this.value, required this.color});
+  final IconData icon;
+  const _SummaryCell({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        color: color,
+        borderRadius: BorderRadius.circular(AppRadius.medium),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
         children: [
-          Text(
-            label,
-            style: TextStyle(
-                fontSize: 10, color: AppColors.textSecondary, height: 1.2),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.22),
+              borderRadius: BorderRadius.circular(AppRadius.small),
+            ),
+            child: Icon(icon, size: 17, color: Colors.white),
           ),
-          const SizedBox(height: 4),
-          _AnimatedCellValue(value: value, color: color),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _AnimatedCellValue(value: value, color: Colors.white),
+                Text(
+                  label,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    height: 1.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -1726,7 +1737,7 @@ class _CalTabButton extends StatelessWidget {
           color: selected
               ? AppColors.primary.withValues(alpha: 0.10)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.small),
           border: Border.all(
               color: selected ? AppColors.primary : AppColors.border),
         ),
@@ -1739,13 +1750,45 @@ class _CalTabButton extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
+              style: AppTextStyles.labelSmall.copyWith(
                 fontWeight: FontWeight.w700,
                 color: selected ? AppColors.primary : AppColors.textSecondary,
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// A soft, circular tinted nav button — matches the reference's chevron
+// buttons. Purely presentational; the caller owns enabled/disabled + the
+// actual month-navigation logic (including the "can't go past the current
+// month" rule, unchanged).
+class _MonthNavButton extends StatelessWidget {
+  final IconData icon;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _MonthNavButton({required this.icon, required this.enabled, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: enabled ? AppColors.primary.withValues(alpha: 0.10) : AppColors.backgroundMid,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 34,
+          height: 34,
+          child: Icon(
+            icon,
+            size: 20,
+            color: enabled ? AppColors.primary : AppColors.textHint.withValues(alpha: 0.5),
+          ),
         ),
       ),
     );
@@ -1830,20 +1873,12 @@ class _HistoryRow extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    row.status,
-                    style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: color),
-                  ),
+                AppStatusBadge(
+                  status: row.status,
+                  label: row.status,
+                  colorsFor: (_) => (color.withValues(alpha: 0.12), color),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 10),
                 ),
               ],
             ),
@@ -1930,6 +1965,14 @@ class _CorrectionDialogState extends ConsumerState<_CorrectionDialog> {
       setState(
           () => _error = 'Correct Out Time is required for this punch type.');
       return;
+    }
+    if (_inTime != null && _outTime != null) {
+      final inMin = _inTime!.hour * 60 + _inTime!.minute;
+      final outMin = _outTime!.hour * 60 + _outTime!.minute;
+      if (outMin <= inMin) {
+        setState(() => _error = 'Correct Out Time must be after Correct In Time.');
+        return;
+      }
     }
 
     setState(() {

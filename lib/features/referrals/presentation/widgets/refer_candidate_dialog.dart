@@ -67,6 +67,9 @@ class _ReferCandidateDialogState extends ConsumerState<ReferCandidateDialog> {
     final required = FormValidators.required(v, fieldName: 'Candidate name');
     if (required != null) return required;
     if (v!.trim().length > 200) return 'Candidate name must be 200 characters or fewer.';
+    if (!FormValidators.candidateNameRe.hasMatch(v.trim())) {
+      return 'Name must contain letters only (no numbers).';
+    }
     return null;
   }
 
@@ -88,6 +91,9 @@ class _ReferCandidateDialogState extends ConsumerState<ReferCandidateDialog> {
     final required = FormValidators.required(v, fieldName: 'Position applied for');
     if (required != null) return required;
     if (v!.trim().length > 200) return 'Position must be 200 characters or fewer.';
+    if (!FormValidators.candidatePositionRe.hasMatch(v.trim())) {
+      return 'Position must contain letters only (no numbers).';
+    }
     return null;
   }
 
@@ -100,6 +106,23 @@ class _ReferCandidateDialogState extends ConsumerState<ReferCandidateDialog> {
   String? _validateRelationship(String? v) {
     if (v == null || v.isEmpty) return 'Please select your relationship with the candidate.';
     return null;
+  }
+
+  // Strips disallowed characters as the user types (mirrors the pattern used
+  // by interview_list's add_candidate_form.dart _field(sanitize: ...)) so
+  // invalid characters never sit in the field waiting for submit-time
+  // validation to reject them.
+  void Function(String) _sanitizeOnChanged(
+      TextEditingController ctrl, String Function(String) sanitize) {
+    return (v) {
+      final cleaned = sanitize(v);
+      if (cleaned != v) {
+        ctrl.value = ctrl.value.copyWith(
+          text: cleaned,
+          selection: TextSelection.collapsed(offset: cleaned.length),
+        );
+      }
+    };
   }
 
   Future<void> _submit() async {
@@ -202,6 +225,7 @@ class _ReferCandidateDialogState extends ConsumerState<ReferCandidateDialog> {
                           controller: _nameCtrl,
                           validator: _validateName,
                           textInputAction: TextInputAction.next,
+                          onChanged: _sanitizeOnChanged(_nameCtrl, FormValidators.sanitizeCandidateName),
                         ),
                         const SizedBox(height: 14),
                         AppTextField(
@@ -220,6 +244,7 @@ class _ReferCandidateDialogState extends ConsumerState<ReferCandidateDialog> {
                           keyboardType: TextInputType.phone,
                           validator: _validatePhone,
                           textInputAction: TextInputAction.next,
+                          onChanged: _sanitizeOnChanged(_phoneCtrl, FormValidators.sanitizeCandidatePhone),
                         ),
                         const SizedBox(height: 14),
                         AppTextField(
@@ -228,6 +253,7 @@ class _ReferCandidateDialogState extends ConsumerState<ReferCandidateDialog> {
                           controller: _positionCtrl,
                           validator: _validatePosition,
                           textInputAction: TextInputAction.next,
+                          onChanged: _sanitizeOnChanged(_positionCtrl, FormValidators.sanitizeCandidatePosition),
                         ),
                         const SizedBox(height: 14),
                         Text('Branch', style: AppTextStyles.label.copyWith(color: AppColors.textSecondary)),

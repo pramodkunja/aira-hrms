@@ -1,59 +1,42 @@
 import 'package:flutter/foundation.dart';
 
-// A role currently active within a department — read-only, computed by the
-// backend from users with that department + role (DepartmentSerializer.get_roles).
-@immutable
-class DepartmentRoleTag {
-  final String name;
-  final String displayName;
-
-  const DepartmentRoleTag({required this.name, required this.displayName});
-
-  factory DepartmentRoleTag.fromJson(Map<String, dynamic> json) => DepartmentRoleTag(
-    name:        json['name'] as String? ?? '',
-    displayName: json['display_name'] as String? ?? '',
-  );
-}
-
+// Backed by the Org Structure API — see ApiConstants.departments' doc
+// comment. A "Department" here is an OrgUnit with is_department_level=true;
+// a "Designation" is a Position that belongs to one.
 @immutable
 class DepartmentModel {
-  final int id;
+  final String id;
   final String name;
-  final String? description;
+  final String? code;
   final bool isActive;
-  final int designationCount;  // designation_count
-  final int employeeCount;     // employee_count
-  final List<DepartmentRoleTag> roles;
+  final int designationCount; // OrgUnit.position_count
+  final int childCount;       // OrgUnit.child_count
 
   const DepartmentModel({
     required this.id,
     required this.name,
-    this.description,
+    this.code,
     required this.isActive,
     required this.designationCount,
-    required this.employeeCount,
-    this.roles = const [],
+    required this.childCount,
   });
 
   factory DepartmentModel.fromJson(Map<String, dynamic> json) => DepartmentModel(
-    id:               json['id'] as int,
+    id:               json['id'] as String,
     name:             json['name'] as String? ?? '',
-    description:      json['description'] as String?,
+    code:             json['code'] as String?,
     isActive:         json['is_active'] as bool? ?? true,
-    designationCount: json['designation_count'] as int? ?? 0,
-    employeeCount:    json['employee_count'] as int? ?? 0,
-    roles: (json['roles'] as List<dynamic>? ?? [])
-        .map((e) => DepartmentRoleTag.fromJson(e as Map<String, dynamic>))
-        .toList(),
+    designationCount: json['position_count'] as int? ?? 0,
+    childCount:       json['child_count'] as int? ?? 0,
   );
 }
 
 @immutable
 class DesignationModel {
-  final int id;
-  final String name;
-  final int departmentId;
-  final String? departmentName;  // department_name
+  final String id;
+  final String name;         // Position.title
+  final String departmentId; // Position.org_unit
+  final String? departmentName;
   final bool isActive;
 
   const DesignationModel({
@@ -65,31 +48,33 @@ class DesignationModel {
   });
 
   factory DesignationModel.fromJson(Map<String, dynamic> json) => DesignationModel(
-    id:             json['id'] as int,
-    name:           json['name'] as String? ?? '',
-    departmentId:   json['department'] as int? ?? json['department_id'] as int? ?? 0,
-    departmentName: json['department_name'] as String?,
+    id:             json['id'] as String,
+    name:           json['title'] as String? ?? '',
+    departmentId:   json['org_unit'] as String? ?? '',
+    departmentName: json['org_unit_name'] as String?,
     isActive:       json['is_active'] as bool? ?? true,
   );
 }
 
 class DeptFormData {
   String name;
-  String description;
-  bool isActive;
+  String code;
 
-  DeptFormData({this.name = '', this.description = '', this.isActive = true});
+  DeptFormData({this.name = '', this.code = ''});
 
   factory DeptFormData.fromModel(DepartmentModel model) => DeptFormData(
-    name:        model.name,
-    description: model.description ?? '',
-    isActive:    model.isActive,
+    name: model.name,
+    code: model.code ?? '',
   );
 
+  // is_department_level is always sent true — this form only ever creates
+  // department-level units, never an arbitrary org-tree node. is_active
+  // isn't included: OrgUnitSerializer marks it read-only, changeable only
+  // via the dedicated deactivate action, not a generic field update.
   Map<String, dynamic> toJson() => {
-    'name':        name,
-    'description': description,
-    'is_active':   isActive,
+    'name': name,
+    if (code.trim().isNotEmpty) 'code': code.trim(),
+    'is_department_level': true,
   };
 
   String? validate() {
@@ -100,27 +85,26 @@ class DeptFormData {
 
 class DesignationFormData {
   String name;
-  int? departmentId;
-  bool isActive;
+  String? departmentId;
 
-  DesignationFormData({this.name = '', this.departmentId, this.isActive = true});
+  DesignationFormData({this.name = '', this.departmentId});
 
   factory DesignationFormData.fromModel(DesignationModel model) => DesignationFormData(
     name:         model.name,
     departmentId: model.departmentId,
-    isActive:     model.isActive,
   );
 
+  // is_active isn't included: PositionSerializer marks it read-only,
+  // changeable only via the dedicated activate/deactivate actions.
   Map<String, dynamic> toJson() => {
-    'name':       name,
-    'department': departmentId,
-    'is_active':  isActive,
+    'title':    name,
+    'org_unit': departmentId,
   };
 
   Map<String, String?> validate() {
     final errors = <String, String?>{};
-    if (name.trim().isEmpty)  errors['name']         = 'Designation name is required';
-    if (departmentId == null) errors['departmentId'] = 'Department is required';
+    if (name.trim().isEmpty)                    errors['name']         = 'Designation name is required';
+    if (departmentId == null || departmentId!.isEmpty) errors['departmentId'] = 'Department is required';
     return errors;
   }
 }

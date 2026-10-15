@@ -53,54 +53,59 @@ class _SeparationApprovalSectionState
     final ctrl = TextEditingController();
     final remarks = await showDialog<String>(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(9),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(Icons.cancel_outlined, size: 17, color: AppColors.error),
               ),
-              child: Icon(Icons.cancel_outlined, size: 17, color: AppColors.error),
-            ),
-            const SizedBox(width: 10),
-            Text('Reject ${stage.stageDisplay}', style: AppTextStyles.label),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Remarks',
-                style: AppTextStyles.caption.copyWith(
-                    fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
-            const SizedBox(height: 6),
-            TextField(
-              controller: ctrl,
-              maxLines: 3,
-              maxLength: 300,
-              autofocus: true,
-              decoration:
-                  const InputDecoration(hintText: 'Explain the rejection…'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            onPressed: () => Navigator.pop(context, ctrl.text.trim()),
-            child: const Text('Submit Rejection'),
+              const SizedBox(width: 10),
+              Text('Reject ${stage.stageDisplay}', style: AppTextStyles.label),
+            ],
           ),
-        ],
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Remarks (required)',
+                  style: AppTextStyles.caption.copyWith(
+                      fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+              const SizedBox(height: 6),
+              TextField(
+                controller: ctrl,
+                maxLines: 3,
+                maxLength: 300,
+                autofocus: true,
+                onChanged: (_) => setDialogState(() {}),
+                decoration:
+                    const InputDecoration(hintText: 'Explain the rejection…'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+              onPressed: ctrl.text.trim().isEmpty
+                  ? null
+                  : () => Navigator.pop(dialogContext, ctrl.text.trim()),
+              child: const Text('Submit Rejection'),
+            ),
+          ],
+        ),
       ),
     );
-    if (remarks == null || !mounted) return;
+    if (remarks == null || remarks.trim().isEmpty || !mounted) return;
     setState(() => _loading = true);
     final err = await ref.read(separationActionsProvider).actionStage(
           requestId: widget.requestId,

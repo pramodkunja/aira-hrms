@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/validators/form_validators.dart';
 import '../providers/document_providers.dart';
 import 'document_file_picker.dart';
 
@@ -24,6 +25,11 @@ class _DocumentUploadDialogState
   bool _uploading = false;
   String? _titleError;
   String? _fileError;
+
+  // Matches the "up to 25 MB" limit advertised in the header text below —
+  // checked here so an oversized file is rejected before upload instead of
+  // only surfacing via a backend 413 after the transfer completes.
+  static const _kMaxUploadBytes = 25 * 1024 * 1024;
 
   static const _categories = [
     ('policy', 'Policy'),
@@ -100,6 +106,7 @@ class _DocumentUploadDialogState
                     TextFormField(
                       controller: _titleCtrl,
                       style: AppTextStyles.body,
+                      maxLength: 200,
                       onChanged: (_) => setState(() => _titleError = null),
                       decoration: _dec('Document Name *', _titleError),
                     ),
@@ -181,8 +188,17 @@ class _DocumentUploadDialogState
       ],
     );
     if (result != null && result.files.isNotEmpty) {
+      final picked = result.files.first;
+      if (picked.size > _kMaxUploadBytes) {
+        setState(() {
+          _pickedFile = null;
+          _fileError =
+              'File is too large (${(picked.size / (1024 * 1024)).toStringAsFixed(1)} MB). Maximum size is 25 MB.';
+        });
+        return;
+      }
       setState(() {
-        _pickedFile = result.files.first;
+        _pickedFile = picked;
         _fileError = null;
       });
     }
@@ -191,9 +207,7 @@ class _DocumentUploadDialogState
   bool _validate() {
     setState(() {
       _fileError = _pickedFile == null ? 'Please select a file' : null;
-      _titleError = _titleCtrl.text.trim().isEmpty
-          ? 'Document name is required'
-          : null;
+      _titleError = FormValidators.required(_titleCtrl.text, fieldName: 'Document name');
     });
     return _pickedFile != null && _titleCtrl.text.trim().isNotEmpty;
   }

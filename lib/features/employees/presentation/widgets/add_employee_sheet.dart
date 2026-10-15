@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/validators/form_validators.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../settings/data/models/departments_model.dart';
@@ -161,6 +163,7 @@ class _AddEmployeeSheetState extends ConsumerState<AddEmployeeSheet> {
               onChanged: (v) => form.phone = v,
               hint: '+91 98765 43210',
               keyboardType: TextInputType.phone,
+              inputFormatters: FormValidators.phoneInputFormatters,
             ),
           ),
         ],
@@ -230,6 +233,8 @@ class _AddEmployeeSheetState extends ConsumerState<AddEmployeeSheet> {
               isoValue: form.dateOfJoining,
               error: _errors['date_of_joining'],
               onChanged: (iso) => setState(() => form.dateOfJoining = iso),
+              firstDate: DateTime(2000),
+              lastDate: DateTime.now(),
             ),
           ),
         ],
@@ -644,6 +649,7 @@ class _Field extends StatelessWidget {
   final String? hint;
   final TextInputType? keyboardType;
   final int maxLines;
+  final List<TextInputFormatter>? inputFormatters;
 
   const _Field({
     required this.label,
@@ -654,6 +660,7 @@ class _Field extends StatelessWidget {
     this.hint,
     this.keyboardType,
     this.maxLines = 1,
+    this.inputFormatters,
   });
 
   @override
@@ -668,6 +675,7 @@ class _Field extends StatelessWidget {
           style: AppTextStyles.body,
           keyboardType: keyboardType,
           maxLines: maxLines,
+          inputFormatters: inputFormatters,
           onChanged: onChanged,
           decoration: _inputDec(hint ?? '', error: error),
         ),
@@ -870,6 +878,10 @@ class _DeptDropdown extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final deptsAsync = ref.watch(employeeFormDepartmentsProvider);
     final depts = deptsAsync.valueOrNull ?? [];
+    // A failed fetch and "genuinely zero departments configured" must not
+    // look identical — `.valueOrNull` alone can't tell them apart, so check
+    // `hasError` explicitly rather than silently rendering an empty list.
+    final loadFailed = deptsAsync.hasError;
 
     final selected = depts
         .where((d) => d.name == selectedName)
@@ -878,19 +890,38 @@ class _DeptDropdown extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _Label(text: 'Department', required: true),
+        Row(
+          children: [
+            const _Label(text: 'Department', required: true),
+            if (loadFailed) ...[
+              const Spacer(),
+              InkWell(
+                onTap: () => ref.invalidate(employeeFormDepartmentsProvider),
+                child: Text('Failed to load — Retry',
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.error,
+                        fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ],
+        ),
         const SizedBox(height: 5),
         DropdownButtonFormField<DepartmentModel>(
           initialValue: selected,
           style: AppTextStyles.body,
           isExpanded: true,
-          decoration: _inputDec('— Select Dept —', error: error),
-          hint: Text('— Select Dept —', style: AppTextStyles.body.copyWith(color: AppColors.textHint)),
+          decoration: _inputDec(
+              loadFailed ? 'Could not load departments' : '— Select Dept —',
+              error: error),
+          hint: Text(
+              loadFailed ? 'Could not load departments' : '— Select Dept —',
+              style: AppTextStyles.body.copyWith(color: AppColors.textHint)),
           items: depts.map((d) => DropdownMenuItem(
             value: d,
             child: Text(d.name, style: AppTextStyles.body, overflow: TextOverflow.ellipsis),
           )).toList(),
-          onChanged: onSelected,
+          onChanged: loadFailed ? null : onSelected,
         ),
         if (error != null) ...[
           const SizedBox(height: 3),
@@ -904,7 +935,7 @@ class _DeptDropdown extends ConsumerWidget {
 // ── Designation dropdown (shared by add + edit) ────────────────────────────────
 
 class _DesignationDropdown extends ConsumerWidget {
-  final int? departmentId;
+  final String? departmentId;
   final String selectedDesignation;
   final String? error;
   final ValueChanged<String?> onSelected;
@@ -920,20 +951,39 @@ class _DesignationDropdown extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final deptId = departmentId;
     final List<String> names;
+    // Same distinction as _DeptDropdown: a failed fetch must not read as
+    // "this department genuinely has zero designations."
+    var loadFailed = false;
 
     if (deptId != null) {
       final async = ref.watch(employeeDesignationsByDeptProvider(deptId));
       names = async.valueOrNull ?? [];
+      loadFailed = async.hasError;
     } else {
       names = [];
     }
 
-    final isEnabled = deptId != null;
+    final isEnabled = deptId != null && !loadFailed;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _Label(text: 'Designation', required: true),
+        Row(
+          children: [
+            const _Label(text: 'Designation', required: true),
+            if (loadFailed) ...[
+              const Spacer(),
+              InkWell(
+                onTap: () => ref.invalidate(employeeDesignationsByDeptProvider(deptId!)),
+                child: Text('Failed to load — Retry',
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.error,
+                        fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ],
+        ),
         const SizedBox(height: 5),
         DropdownButtonFormField<String>(
           initialValue: selectedDesignation.isEmpty ? null : selectedDesignation,
@@ -942,12 +992,16 @@ class _DesignationDropdown extends ConsumerWidget {
           ),
           isExpanded: true,
           decoration: _inputDec(
-            isEnabled ? '— Select —' : 'Select department first',
+            loadFailed
+                ? 'Could not load designations'
+                : (isEnabled ? '— Select —' : 'Select department first'),
             error: error,
-            enabled: isEnabled,
+            enabled: deptId != null,
           ),
           hint: Text(
-            isEnabled ? '— Select —' : 'Select department first',
+            loadFailed
+                ? 'Could not load designations'
+                : (isEnabled ? '— Select —' : 'Select department first'),
             style: AppTextStyles.body.copyWith(color: AppColors.textHint),
           ),
           items: isEnabled

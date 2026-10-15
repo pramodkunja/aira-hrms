@@ -254,23 +254,23 @@ class _AttendanceRingCardState extends ConsumerState<AttendanceRingCard>
                       children: [
                         _ActionButton(
                           icon: today.isClockedIn ? Icons.logout : Icons.login,
-                          label: today.isClockedIn ? 'Clock Out' : 'Clock In',
+                          label: today.isClockedIn ? 'Punch Out' : 'Punch In',
                           color: today.isClockedIn ? AppColors.error : AppColors.success,
                           loading: _punching,
                           onTap: () => _toggleClock(today),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                         _ActionButton(
                           icon: Icons.event_note_outlined,
-                          label: 'Attendance',
-                          color: AppColors.info,
+                          label: 'My Timecard',
+                          color: AppColors.accentNavy,
                           onTap: () => goToDashboardSection(context, AppRoutes.myAttendance),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                         _ActionButton(
                           icon: Icons.beach_access_outlined,
                           label: 'Apply Leave',
-                          color: AppColors.secondary,
+                          color: AppColors.primary,
                           onTap: () => goToDashboardSection(context, AppRoutes.leave),
                         ),
                       ],
@@ -344,7 +344,7 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 38,
+      height: 42,
       child: ElevatedButton(
         onPressed: loading ? null : onTap,
         style: ElevatedButton.styleFrom(
@@ -352,8 +352,8 @@ class _ActionButton extends StatelessWidget {
           foregroundColor: Colors.white,
           disabledBackgroundColor: color.withValues(alpha: 0.6),
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
         child: loading
             ? const SizedBox(

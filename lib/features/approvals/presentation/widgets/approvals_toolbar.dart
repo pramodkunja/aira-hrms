@@ -130,11 +130,19 @@ class _ApprovalsToolbarState extends ConsumerState<ApprovalsToolbar> {
   Future<void> _pickDate({required bool isFrom}) async {
     final current =
         isFrom ? ref.read(approvalsDateFromProvider) : ref.read(approvalsDateToProvider);
+    final dateFrom = ref.read(approvalsDateFromProvider);
+    final dateTo = ref.read(approvalsDateToProvider);
+    // Clamp so the two pickers can't produce an inverted (from > to) range.
+    final firstDate = isFrom ? DateTime(2020, 1, 1) : (dateFrom ?? DateTime(2020, 1, 1));
+    final lastDate = isFrom ? (dateTo ?? DateTime(2100, 12, 31)) : DateTime(2100, 12, 31);
+    var initialDate = current ?? DateTime.now();
+    if (initialDate.isBefore(firstDate)) initialDate = firstDate;
+    if (initialDate.isAfter(lastDate)) initialDate = lastDate;
     final picked = await showDatePicker(
       context: context,
-      initialDate: current ?? DateTime.now(),
-      firstDate: DateTime(2020, 1, 1),
-      lastDate: DateTime(2100, 12, 31),
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
     );
     if (picked == null) return;
     if (isFrom) {

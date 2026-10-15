@@ -112,7 +112,7 @@ class _LeaveDashboardTabState extends ConsumerState<LeaveDashboardTab> {
     final ctrl = TextEditingController();
     return showDialog<String>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
@@ -152,11 +152,11 @@ class _LeaveDashboardTabState extends ConsumerState<LeaveDashboardTab> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancel')),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            onPressed: () => Navigator.pop(context, ctrl.text.trim()),
+            onPressed: () => Navigator.pop(dialogContext, ctrl.text.trim()),
             child: const Text('Submit Rejection'),
           ),
         ],

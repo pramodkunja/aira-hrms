@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../shared/validators/form_validators.dart';
 import '../models/referral_model.dart';
 
 class ReferralRemoteDataSource {
@@ -19,15 +20,10 @@ class ReferralRemoteDataSource {
     return [];
   }
 
-  // Keeps a leading '+' (if present) and strips everything but digits, so
-  // "+91 987-654-3210" (a plausible, UI-encouraged input) becomes
-  // "+919876543210" — matching the backend's `^\+?[0-9]{10,15}$`.
-  String _normalizePhone(String phone) {
-    final trimmed = phone.trim();
-    final hasPlus = trimmed.startsWith('+');
-    final digitsOnly = trimmed.replaceAll(RegExp(r'[^0-9]'), '');
-    return hasPlus ? '+$digitsOnly' : digitsOnly;
-  }
+  // Delegates to the single shared implementation (FormValidators mirrors
+  // the backend's `^\+?[0-9]{10,15}$`) so the UI's live sanitizer and this
+  // pre-submit normalization can't drift apart.
+  String _normalizePhone(String phone) => FormValidators.sanitizeCandidatePhone(phone);
 
   Future<List<ReferralModel>> fetchMyReferrals() async {
     final res = await _dio.get(ApiConstants.referrals);

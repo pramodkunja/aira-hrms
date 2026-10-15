@@ -9,7 +9,11 @@ class AnnouncementModel {
   final String body;
   final String category;
   final String visibility;
-  final int? targetDepartment;
+  // Backend field is target_org_unit (FK to OrgUnit) — the old
+  // target_department FK was dropped, see apps/announcements/migrations
+  // 0004/0005. Field name kept as targetDepartment here since it's still
+  // "which department this announcement targets" from the UI's POV.
+  final String? targetDepartment;
   final int? targetBranch;
   final String? targetDepartmentName;
   final String? targetBranchName;
@@ -64,9 +68,9 @@ class AnnouncementModel {
       body:                 json['body'] as String? ?? '',
       category:             json['category'] as String? ?? 'general',
       visibility:           json['visibility'] as String? ?? 'all',
-      targetDepartment:     json['target_department'] as int?,
+      targetDepartment:     json['target_org_unit'] as String?,
       targetBranch:         json['target_branch'] as int?,
-      targetDepartmentName: json['target_department_name'] as String?,
+      targetDepartmentName: json['target_org_unit_name'] as String?,
       targetBranchName:     json['target_branch_name'] as String?,
       isPinned:             json['is_pinned'] as bool? ?? false,
       sendEmail:            json['send_email'] as bool? ?? false,
@@ -165,7 +169,7 @@ class AnnouncementFormData {
   String body;
   String category;
   String visibility;
-  int? targetDepartment;
+  String? targetDepartment;
   int? targetBranch;
   bool isPinned;
   bool sendEmail;
@@ -199,7 +203,7 @@ class AnnouncementFormData {
         'category': category,
         'visibility': visibility,
         if (visibility == 'department' && targetDepartment != null)
-          'target_department': targetDepartment,
+          'target_org_unit': targetDepartment,
         if (visibility == 'branch' && targetBranch != null)
           'target_branch': targetBranch,
         'is_pinned':   isPinned,

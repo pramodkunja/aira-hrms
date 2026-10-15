@@ -16,9 +16,21 @@ class AppColors {
   static bool get isDark => _isDark;
 
   // ── Light palette ──────────────────────────────────────────────────────────
-  static const Color _lightPrimary = Color(0xFF1E4E8C);
-  static const Color _lightPrimaryLight = Color(0xFF5B86C9);
+  // Teal/turquoise brand primary (target design system) — was deep blue
+  // (0xFF1E4E8C); that value lives on as [accentNavy] below for the handful
+  // of new dashboard widgets that specifically want a navy accent next to
+  // the new teal, without touching the 35+ existing call sites that already
+  // read the (unchanged) gold `secondary` token.
+  static const Color _lightPrimary = Color(0xFF0D9488);
+  static const Color _lightPrimaryLight = Color(0xFF2DD4BF);
   static const Color _lightSecondary = Color(0xFFC99A2E);
+  static const Color _lightAccentNavy = Color(0xFF1E4E8C);
+  // Container companions for primary/secondary — every other semantic color
+  // in this file (success/warning/error/info) already has one; primary and
+  // secondary were the gap. Derived the same way those are: a light pastel
+  // tint in light mode, a deep muted tint in dark mode.
+  static const Color _lightPrimaryContainer = Color(0xFFCCFBF1);
+  static const Color _lightSecondaryContainer = Color(0xFFFCEFD1);
   static const Color _lightBackground = Color(0xFFF7F9FC);
   static const Color _lightBackgroundLow = Color(0xFFEFF2F8);
   static const Color _lightBackgroundMid = Color(0xFFE7ECF4);
@@ -47,9 +59,14 @@ class AppColors {
   static const Color _lightAccentPurpleContainer = Color(0xFFF3E5FB);
 
   // ── Dark palette (web: body.dark-mode CSS vars) ───────────────────────────
-  static const Color _darkPrimary = Color(0xFF7FA3DE);
-  static const Color _darkPrimaryLight = Color(0xFFA8C3EA);
+  static const Color _darkPrimary = Color(0xFF5EEAD4);
+  static const Color _darkPrimaryLight = Color(0xFF99F6E4);
   static const Color _darkSecondary = Color(0xFFD9AE55);
+  // Lighter than the light-mode navy, matching the same lighten-for-dark
+  // treatment as every other accent below.
+  static const Color _darkAccentNavy = Color(0xFF7FA3DE);
+  static const Color _darkPrimaryContainer = Color(0xFF134E4A);
+  static const Color _darkSecondaryContainer = Color(0xFF3A2E12);
   static const Color _darkBackground = Color(0xFF10151F);
   static const Color _darkBackgroundLow = Color(0xFF161C28);
   static const Color _darkBackgroundMid = Color(0xFF1C2330);
@@ -78,6 +95,9 @@ class AppColors {
   static Color primary = _lightPrimary;
   static Color primaryLight = _lightPrimaryLight;
   static Color secondary = _lightSecondary;
+  static Color accentNavy = _lightAccentNavy;
+  static Color primaryContainer = _lightPrimaryContainer;
+  static Color secondaryContainer = _lightSecondaryContainer;
   static Color background = _lightBackground;
   static Color backgroundLow = _lightBackgroundLow;
   static Color backgroundMid = _lightBackgroundMid;
@@ -106,6 +126,9 @@ class AppColors {
     primary = dark ? _darkPrimary : _lightPrimary;
     primaryLight = dark ? _darkPrimaryLight : _lightPrimaryLight;
     secondary = dark ? _darkSecondary : _lightSecondary;
+    accentNavy = dark ? _darkAccentNavy : _lightAccentNavy;
+    primaryContainer = dark ? _darkPrimaryContainer : _lightPrimaryContainer;
+    secondaryContainer = dark ? _darkSecondaryContainer : _lightSecondaryContainer;
     background = dark ? _darkBackground : _lightBackground;
     backgroundLow = dark ? _darkBackgroundLow : _lightBackgroundLow;
     backgroundMid = dark ? _darkBackgroundMid : _lightBackgroundMid;
@@ -128,6 +151,16 @@ class AppColors {
         dark ? _darkAccentPurpleContainer : _lightAccentPurpleContainer;
   }
 
+  // ── Semantic aliases ────────────────────────────────────────────────────
+  // Not separate palette entries — each already exists as a live field above
+  // under a different name, already used everywhere for exactly this
+  // purpose. Aliased (not duplicated) so both names always agree and a
+  // light/dark toggle can never leave one stale relative to the other.
+  static Color get surfaceVariant => backgroundLow;
+  static Color get textTertiary => textHint;
+  static Color get divider => border;
+  static Color get disabled => textHint;
+
   // Shadows — tinted-primary shadows read as muddy smears on a dark
   // background, so dark mode uses plain low-alpha black instead.
   static List<BoxShadow> get cardShadow => _isDark
@@ -145,12 +178,12 @@ class AppColors {
         ]
       : [
           BoxShadow(
-            color: const Color(0xFF1E4E8C).withValues(alpha: 0.08),
+            color: const Color(0xFF0D9488).withValues(alpha: 0.08),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
           BoxShadow(
-            color: const Color(0xFF1E4E8C).withValues(alpha: 0.06),
+            color: const Color(0xFF0D9488).withValues(alpha: 0.06),
             blurRadius: 0,
             spreadRadius: 1,
           ),
@@ -166,7 +199,7 @@ class AppColors {
         ]
       : [
           BoxShadow(
-            color: const Color(0xFF1E4E8C).withValues(alpha: 0.12),
+            color: const Color(0xFF0D9488).withValues(alpha: 0.12),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),

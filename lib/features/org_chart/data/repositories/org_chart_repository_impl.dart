@@ -1,61 +1,84 @@
 import '../../domain/entities/org_chart_entity.dart';
 import '../../domain/repositories/org_chart_repository.dart';
 import '../datasources/org_chart_remote_datasource.dart';
+import '../models/org_chart_form_data.dart';
 
-/// Maps the backend's `/org-chart/` response 1:1 — no client-side guessing
-/// of who the "head"/root is. That decision is made server-side
-/// (`_build_org_chart_group`) from `reporting_manager`/`Department.manager`.
 class OrgChartRepositoryImpl implements OrgChartRepository {
   final OrgChartRemoteDataSource _ds;
   OrgChartRepositoryImpl(this._ds);
 
   @override
-  Future<OrgChartEntity> getOrgChart({String? branch}) async {
-    final raw = await _ds.fetchOrgChart(branch: branch);
-    final scope = raw['scope'] == 'company'
-        ? OrgChartScope.company
-        : OrgChartScope.branch;
-    final groups = (raw['groups'] as List<dynamic>? ?? [])
-        .cast<Map<String, dynamic>>()
-        .map(_toGroup)
-        .toList();
-    return OrgChartEntity(scope: scope, groups: groups);
-  }
+  Future<List<OrgUnitEntity>> getUnits() => _ds.fetchUnits();
 
   @override
-  Future<List<String>> getBranchNames() => _ds.fetchBranchNames();
+  Future<List<OrgPositionEntity>> getPositions() => _ds.fetchPositions();
 
-  static OrgChartGroupEntity _toGroup(Map<String, dynamic> g) {
-    final rootJson = g['root'] as Map<String, dynamic>?;
-    return OrgChartGroupEntity(
-      branch: g['branch'] as String? ?? '',
-      root: rootJson == null ? null : _toPerson(rootJson),
-      departments: (g['departments'] as List<dynamic>? ?? [])
-          .cast<Map<String, dynamic>>()
-          .map(_toDepartment)
-          .toList(),
-    );
-  }
+  @override
+  Future<List<OrgBranchEntity>> getBranches() => _ds.fetchBranches();
 
-  static OrgDepartmentEntity _toDepartment(Map<String, dynamic> d) {
-    final headJson = d['head'] as Map<String, dynamic>?;
-    return OrgDepartmentEntity(
-      id: d['id'] as int? ?? 0,
-      label: d['label'] as String? ?? '',
-      head: headJson == null ? null : _toPerson(headJson),
-      members: (d['members'] as List<dynamic>? ?? [])
-          .cast<Map<String, dynamic>>()
-          .map(_toPerson)
-          .toList(),
-    );
-  }
+  @override
+  Future<OrgUnitEntity> createUnit(OrgUnitFormData form) => _ds.createUnit(form);
 
-  static OrgPersonEntity _toPerson(Map<String, dynamic> p) {
-    return OrgPersonEntity(
-      id: p['id']?.toString() ?? '',
-      employeeId: p['employee_id'] as String? ?? '',
-      name: p['name'] as String? ?? '',
-      designation: p['designation'] as String? ?? '',
-    );
-  }
+  @override
+  Future<OrgUnitEntity> updateUnit(String id, Map<String, dynamic> patch) => _ds.updateUnit(id, patch);
+
+  @override
+  Future<void> deleteUnit(String id) => _ds.deleteUnit(id);
+
+  @override
+  Future<OrgPositionEntity> createPosition(Map<String, dynamic> payload) => _ds.createPosition(payload);
+
+  @override
+  Future<OrgPositionEntity> updatePosition(String id, Map<String, dynamic> patch) =>
+      _ds.updatePosition(id, patch);
+
+  @override
+  Future<void> deletePosition(String id) => _ds.deletePosition(id);
+
+  @override
+  Future<OrgPositionEntity> deactivatePosition(String id) => _ds.deactivatePosition(id);
+
+  @override
+  Future<OrgPositionEntity> activatePosition(String id) => _ds.activatePosition(id);
+
+  @override
+  Future<List<PlacementEntity>> getPlacements(String positionId) => _ds.fetchPlacements(positionId);
+
+  @override
+  Future<OrgPositionEntity> assignHolder(
+    String positionId, {
+    required String employeeUuid,
+    required String effectiveFrom,
+    String? effectiveTo,
+  }) =>
+      _ds.assignHolder(
+        positionId,
+        employeeUuid: employeeUuid,
+        effectiveFrom: effectiveFrom,
+        effectiveTo: effectiveTo,
+      );
+
+  @override
+  Future<OrgPositionEntity> endPlacement(String positionId, {required String effectiveTo}) =>
+      _ds.endPlacement(positionId, effectiveTo: effectiveTo);
+
+  @override
+  Future<void> cancelPlacement(String placementId) => _ds.cancelPlacement(placementId);
+
+  @override
+  Future<List<EmployeeOptionEntity>> getEmployeeOptions() => _ds.fetchEmployeeOptions();
+
+  @override
+  Future<List<JobTemplateEntity>> getJobTemplates() => _ds.fetchJobTemplates();
+
+  @override
+  Future<JobTemplateEntity> createJobTemplate(JobTemplateFormData form) =>
+      _ds.createJobTemplate(form);
+
+  @override
+  Future<JobTemplateEntity> setJobTemplateActive(String id, bool isActive) =>
+      _ds.patchJobTemplate(id, {'is_active': isActive});
+
+  @override
+  Future<void> deleteJobTemplate(String id) => _ds.deleteJobTemplate(id);
 }

@@ -176,6 +176,43 @@ class _FaceIdRegistrationsScreenState extends ConsumerState<FaceIdRegistrationsS
       );
     }
 
+    // Backend's FaceRegistrationHRRegisterView also 403s when the org-wide
+    // "Face ID mandatory" toggle is off (apps/attendance/views/
+    // face_registration_hr.py::is_face_verification_mandatory) — surface
+    // that up front instead of letting the user fill out the whole flow
+    // only to hit a confusing 403 on submit (mirrors ProfileFaceIdSection's
+    // equivalent check for the self-service registration flow).
+    final verificationAsync = ref.watch(faceVerificationStatusProvider);
+    final isMandatory = verificationAsync.valueOrNull?.isMandatory ?? true;
+    if (verificationAsync.hasValue && !isMandatory) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.face_retouching_off_outlined, size: 44, color: AppColors.textHint),
+                const SizedBox(height: 12),
+                Text(
+                  'Face ID verification is currently disabled for this organization.',
+                  style: AppTextStyles.body,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Ask an admin to enable it in Attendance Settings before registering employees.',
+                  style: AppTextStyles.caption,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(

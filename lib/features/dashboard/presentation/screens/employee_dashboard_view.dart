@@ -8,9 +8,11 @@ import 'package:mobile_app/features/attendance/presentation/providers/attendance
 import 'package:mobile_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:mobile_app/features/hrms/domain/entities/birthday_entity.dart';
 import 'package:mobile_app/features/hrms/presentation/providers/hrms_providers.dart';
+import 'package:mobile_app/shared/widgets/app_status_badge.dart';
 import '../../data/models/employee_dashboard_models.dart';
 import '../providers/dashboard_providers.dart';
 import '../widgets/attendance_ring_card.dart';
+import '../widgets/dashboard_header.dart';
 import '../widgets/dashboard_section.dart';
 import '../widgets/quick_access.dart';
 
@@ -61,9 +63,13 @@ class EmployeeDashboardView extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            DashboardHeader(name: user?.fullName ?? '', roleDisplay: user?.roleDisplay ?? ''),
+            const SizedBox(height: 20),
             const _EmpConsoleCard(),
             const SizedBox(height: 20),
             const AttendanceRingCard(),
+            const SizedBox(height: 20),
+            const _EmpAnnouncementBanner(),
             const SizedBox(height: 20),
             QuickAccessCard(items: kQuickItemsEmployee),
             const SizedBox(height: 20),
@@ -74,8 +80,6 @@ class EmployeeDashboardView extends ConsumerWidget {
             const _EmpActionItemsCard(),
             const SizedBox(height: 20),
             const _EmpRecentRequestsCard(),
-            const SizedBox(height: 20),
-            const _EmpAnnouncementBanner(),
             if (canViewBirthdays) ...[
               const SizedBox(height: 20),
               const _TodaysBirthdaysCard(),
@@ -797,37 +801,18 @@ class _ActionItemRow extends StatelessWidget {
   }
 }
 
+/// Thin wrapper (kept under its original name/params — used by both the
+/// action-items and recent-requests cards below) around the app-wide
+/// [AppStatusBadge], which now owns the (background, foreground) mapping
+/// this used to define locally.
 class _StatusBadge extends StatelessWidget {
   final String status;
   final Map<String, String> labelMap;
   const _StatusBadge({required this.status, required this.labelMap});
 
-  // (background, foreground) — solid *Container fill behind the accent
-  // color, matching EmployeeCard._StatusBadge's reference pattern, instead
-  // of a runtime alpha blend that reads as a barely-visible tint in dark
-  // mode (AppColors' dark accents are already light/pastel).
-  static (Color, Color) _colorsFor(String s) => switch (s) {
-        'approved' => (AppColors.successContainer, AppColors.success),
-        'rejected' => (AppColors.errorContainer, AppColors.error),
-        'cancelled' => (AppColors.backgroundMid, AppColors.textSecondary),
-        _ => (AppColors.warningContainer, AppColors.warning),
-      };
-
   @override
   Widget build(BuildContext context) {
-    final (bg, fg) = _colorsFor(status);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        labelMap[status] ?? status,
-        style: AppTextStyles.labelSmall
-            .copyWith(color: fg, fontWeight: FontWeight.w700, fontSize: 10),
-      ),
-    );
+    return AppStatusBadge(status: status, label: labelMap[status] ?? status);
   }
 }
 

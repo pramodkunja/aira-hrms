@@ -137,7 +137,7 @@ class _LeaveRequestDetailSheetState
     final ctrl = TextEditingController();
     final reason = await showDialog<String>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
@@ -177,11 +177,11 @@ class _LeaveRequestDetailSheetState
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancel')),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            onPressed: () => Navigator.pop(context, ctrl.text.trim()),
+            onPressed: () => Navigator.pop(dialogContext, ctrl.text.trim()),
             child: const Text('Submit Rejection'),
           ),
         ],

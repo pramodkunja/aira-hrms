@@ -15,6 +15,7 @@ import 'package:mobile_app/features/dashboard/data/models/admin_dashboard_models
 import 'package:mobile_app/features/dashboard/data/models/dashboard_common_models.dart';
 import 'package:mobile_app/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:mobile_app/features/dashboard/presentation/widgets/attendance_ring_card.dart';
+import 'package:mobile_app/features/dashboard/presentation/widgets/dashboard_header.dart';
 import 'package:mobile_app/features/dashboard/presentation/widgets/dashboard_section.dart';
 import 'package:mobile_app/features/dashboard/presentation/widgets/quick_access.dart';
 
@@ -28,6 +29,8 @@ class AdminDashboardView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authStateProvider).valueOrNull?.user;
+
     Future<void> refreshAll() async {
       ref.invalidate(systemAdminKpisProvider);
       ref.invalidate(todayAttendanceProvider);
@@ -57,17 +60,19 @@ class AdminDashboardView extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            DashboardHeader(name: user?.fullName ?? '', roleDisplay: user?.roleDisplay ?? ''),
+            const SizedBox(height: 20),
             const _SystemConsoleHeader(),
             const SizedBox(height: 20),
             const AttendanceRingCard(),
+            const SizedBox(height: 20),
+            const _AnnouncementCard(),
             const SizedBox(height: 20),
             QuickAccessCard(items: kQuickItemsAdmin),
             const SizedBox(height: 20),
             const _PendingApprovalsCard(),
             const SizedBox(height: 20),
             const _DepartmentHeadcountCard(),
-            const SizedBox(height: 20),
-            const _AnnouncementCard(),
             const SizedBox(height: 20),
             const _EmployeeLifecycleCard(),
             const SizedBox(height: 20),
@@ -131,24 +136,6 @@ class _SystemConsoleHeader extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          // Service health stays its own small row — a system admin's
-          // "is the platform healthy" glance is a different concept from
-          // "am I personally clocked in" below it, so it isn't folded into
-          // the shared info bar, just kept in the same gradient zone.
-          kpisAsync.maybeWhen(
-            data: (kpis) => Wrap(
-              spacing: 12,
-              runSpacing: 6,
-              children: [
-                _HealthDot(label: 'API', isUp: kpis.apiStatus),
-                _HealthDot(label: 'DB', isUp: kpis.databaseStatus),
-                _HealthDot(label: 'Mail', isUp: kpis.mailStatus),
-                _HealthDot(label: 'Storage', isUp: kpis.storageStatus),
-              ],
-            ),
-            orElse: () => const SizedBox.shrink(),
-          ),
           const SizedBox(height: 16),
           ConsoleInfoBar(clockedIn: clockedIn),
         ],
@@ -187,34 +174,6 @@ class _SystemConsoleHeader extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _HealthDot extends StatelessWidget {
-  final String label;
-  final bool isUp;
-
-  const _HealthDot({required this.label, required this.isUp});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isUp ? const Color(0xFF4ADE80) : const Color(0xFFF87171);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 7,
-          height: 7,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: AppTextStyles.caption
-              .copyWith(color: Colors.white.withValues(alpha: 0.85)),
-        ),
-      ],
     );
   }
 }

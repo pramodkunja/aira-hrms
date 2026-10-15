@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_app/core/router/app_router.dart';
 import 'package:mobile_app/core/theme/app_colors.dart';
+import 'package:mobile_app/core/theme/app_spacing.dart';
 import 'package:mobile_app/core/theme/app_text_styles.dart';
 import 'dashboard_section.dart';
 
@@ -268,9 +269,9 @@ class QuickAccessGrid extends StatelessWidget {
       // lays out as a clean 3×2 grid matching the reference design.
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        mainAxisExtent: 92,
+        mainAxisSpacing: AppSpacing.md,
+        crossAxisSpacing: AppSpacing.md,
+        mainAxisExtent: 94,
       ),
       itemBuilder: (context, index) => QuickTile(item: items[index]),
     );
@@ -293,12 +294,12 @@ class QuickTile extends StatelessWidget {
           ? context.push(item.path)
           : goToDashboardSection(context, item.path),
       child: Container(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(AppSpacing.sm),
         decoration: BoxDecoration(
           // A proper bordered white card (not a flat tinted chip) — matches
           // the reference design's nested-card look for each tile.
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.border),
         ),
         child: Column(
@@ -317,15 +318,15 @@ class QuickTile extends StatelessWidget {
                     child: Image.asset(item.imageAsset!, fit: BoxFit.contain),
                   )
                 : Container(
-                    width: 34,
-                    height: 34,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
                       color: item.color.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(11),
                     ),
-                    child: Icon(item.icon, color: item.color, size: 17),
+                    child: Icon(item.icon, color: item.color, size: 18),
                   ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               item.label,
               style: AppTextStyles.bodySmall.copyWith(

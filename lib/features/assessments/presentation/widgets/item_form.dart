@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../data/models/assessment_model.dart';
@@ -90,6 +91,7 @@ class ItemForm extends StatelessWidget {
                 child: TextFormField(
                   controller: orderCtrl,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: _dec('Order'),
                 ),
               ),
@@ -113,6 +115,7 @@ class ItemForm extends StatelessWidget {
             TextFormField(
               controller: durationCtrl,
               keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: _dec('Duration (seconds)', hint: '180'),
             ),
           ] else ...[
@@ -155,6 +158,7 @@ class ItemForm extends StatelessWidget {
                   child: TextFormField(
                     controller: passScoreCtrl,
                     keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     decoration: _dec('Points', hint: '0'),
                   ),
                 ),

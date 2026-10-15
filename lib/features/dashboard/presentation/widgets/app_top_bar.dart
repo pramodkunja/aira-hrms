@@ -10,7 +10,6 @@ import 'package:mobile_app/features/notifications/presentation/widgets/notificat
 /// needs its own RenderBox to anchor the dropdown panel under itself).
 class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  final VoidCallback onMenuTap;
   final VoidCallback onLogoutTap;
   final VoidCallback onThemeToggleTap;
   final bool isDarkMode;
@@ -21,7 +20,6 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   const AppTopBar({
     super.key,
     required this.title,
-    required this.onMenuTap,
     required this.onLogoutTap,
     required this.onThemeToggleTap,
     required this.isDarkMode,
@@ -74,20 +72,19 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Row(
               children: [
-                // Hamburger — opens the drawer
-                IconButton(
-                  icon: const Icon(Icons.menu_rounded),
-                  color: iconColor,
-                  onPressed: onMenuTap,
-                  tooltip: 'Menu',
-                ),
-
-                // Page title
+                // Page title — the hamburger that used to sit here opened the
+                // Menu sheet, which is now reached from the bottom nav's own
+                // center Menu button on every screen, so it was a redundant
+                // second entry point and has been removed rather than kept
+                // as a duplicate.
                 Expanded(
-                  child: Text(
-                    title,
-                    style: AppTextStyles.h4.copyWith(color: titleColor, fontWeight: FontWeight.w700),
-                    overflow: TextOverflow.ellipsis,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Text(
+                      title,
+                      style: AppTextStyles.h4.copyWith(color: titleColor, fontWeight: FontWeight.w700),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
 

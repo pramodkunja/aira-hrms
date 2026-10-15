@@ -356,9 +356,9 @@ class _VisibilityDropdown extends StatelessWidget {
 }
 
 class _DepartmentDropdown extends ConsumerWidget {
-  final int? value;
+  final String? value;
   final String? error;
-  final ValueChanged<int?> onChanged;
+  final ValueChanged<String?> onChanged;
   const _DepartmentDropdown({this.value, this.error, required this.onChanged});
 
   @override
@@ -367,7 +367,7 @@ class _DepartmentDropdown extends ConsumerWidget {
     return deptsAsync.when(
       loading: () => const LinearProgressIndicator(),
       error: (_, __) => const SizedBox.shrink(),
-      data: (depts) => DropdownButtonFormField<int>(
+      data: (depts) => DropdownButtonFormField<String>(
         initialValue: value,
         items: depts
             .map((d) => DropdownMenuItem(value: d.id, child: Text(d.name)))

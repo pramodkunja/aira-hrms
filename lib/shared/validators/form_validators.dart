@@ -1,7 +1,27 @@
+import 'package:flutter/services.dart';
 import 'package:mobile_app/core/constants/app_constants.dart';
 
 class FormValidators {
   FormValidators._();
+
+  // Character set accepted by [lenientPhone]'s regex (`^\+?[\d\s\-()./]{7,20}$`)
+  // minus the length bound, applied as keystroke-level input formatters so
+  // letters/invalid symbols never make it into the field in the first place.
+  static final List<TextInputFormatter> phoneInputFormatters = [
+    FilteringTextInputFormatter.allow(RegExp(r'[\d\s\-()./+]')),
+    LengthLimitingTextInputFormatter(20),
+  ];
+
+  // Mirrors the standard IFSC format used by Indian bank onboarding forms:
+  // 4 letters (bank code) + '0' + 6 alphanumeric (branch code).
+  static final RegExp _ifscRe = RegExp(r'^[A-Z]{4}0[A-Z0-9]{6}$');
+
+  static String? ifsc(String? value, {bool required = false}) {
+    final v = (value ?? '').trim();
+    if (v.isEmpty) return required ? 'IFSC code is required.' : null;
+    if (!_ifscRe.hasMatch(v)) return 'Enter a valid IFSC code (e.g. HDFC0001234).';
+    return null;
+  }
 
   static String? email(String? value) {
     if (value == null || value.trim().isEmpty) return 'Email is required.';

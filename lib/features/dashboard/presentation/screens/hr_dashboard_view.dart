@@ -9,6 +9,7 @@ import 'package:mobile_app/features/dashboard/data/models/dashboard_common_model
 import 'package:mobile_app/features/dashboard/data/models/hr_dashboard_models.dart';
 import 'package:mobile_app/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:mobile_app/features/dashboard/presentation/widgets/attendance_ring_card.dart';
+import 'package:mobile_app/features/dashboard/presentation/widgets/dashboard_header.dart';
 import 'package:mobile_app/features/dashboard/presentation/widgets/dashboard_section.dart';
 import 'package:mobile_app/features/dashboard/presentation/widgets/quick_access.dart';
 import 'package:mobile_app/features/employees/data/models/employee_model.dart'
@@ -25,6 +26,8 @@ class HrDashboardView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authStateProvider).valueOrNull?.user;
+
     Future<void> refreshAll() async {
       ref.invalidate(hrKpisProvider);
       ref.invalidate(sharedAnnouncementProvider);
@@ -54,9 +57,13 @@ class HrDashboardView extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            DashboardHeader(name: user?.fullName ?? '', roleDisplay: user?.roleDisplay ?? ''),
+            const SizedBox(height: 20),
             const _HrConsoleHeader(),
             const SizedBox(height: 20),
             const AttendanceRingCard(),
+            const SizedBox(height: 20),
+            const _AnnouncementCard(),
             const SizedBox(height: 20),
             QuickAccessCard(items: kQuickItemsHr),
             const SizedBox(height: 20),
@@ -65,8 +72,6 @@ class HrDashboardView extends ConsumerWidget {
             const _ActionQueueCard(),
             const SizedBox(height: 20),
             const _RecruitmentFunnelCard(),
-            const SizedBox(height: 20),
-            const _AnnouncementCard(),
             const SizedBox(height: 20),
             const _EmployeeLifecycleCard(),
             const SizedBox(height: 20),

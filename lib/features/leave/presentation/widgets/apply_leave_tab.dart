@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/validators/form_validators.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../documents/presentation/widgets/document_file_picker.dart';
@@ -896,6 +897,8 @@ class _ApplyLeaveTabState extends ConsumerState<ApplyLeaveTab> {
                             const SizedBox(height: 6),
                             TextField(
                               controller: _contactCtrl,
+                              keyboardType: TextInputType.phone,
+                              inputFormatters: FormValidators.phoneInputFormatters,
                               decoration: const InputDecoration(
                                 hintText: '+91 9876543210',
                                 prefixIcon:

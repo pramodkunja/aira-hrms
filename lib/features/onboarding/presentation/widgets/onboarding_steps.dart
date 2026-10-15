@@ -643,8 +643,20 @@ class _EducationStepState extends State<_EducationStep> {
                 controller: _year,
                 decoration: _fieldDec('Year of Passing', hint: 'e.g. 2020'),
                 keyboardType: TextInputType.number,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Required' : null,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(4),
+                ],
+                validator: (v) {
+                  final trimmed = (v ?? '').trim();
+                  if (trimmed.isEmpty) return 'Required';
+                  final year = int.tryParse(trimmed);
+                  final currentYear = DateTime.now().year;
+                  if (year == null || year < 1950 || year > currentYear) {
+                    return 'Enter a valid year between 1950 and $currentYear.';
+                  }
+                  return null;
+                },
               ),
             ),
           ],
@@ -795,6 +807,10 @@ class _BankStepState extends State<_BankStep> {
                     hint: 'Bank account number',
                     icon: Icons.credit_card_outlined),
                 keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(20),
+                ],
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
@@ -808,8 +824,7 @@ class _BankStepState extends State<_BankStep> {
                         required isFocused,
                         maxLength}) =>
                     null,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Required' : null,
+                validator: (v) => FormValidators.ifsc(v, required: true),
               ),
             ),
             _fieldRow(
@@ -933,6 +948,7 @@ class _EmergencyStepState extends State<_EmergencyStep> {
                 decoration: _fieldDec('Phone Number',
                     hint: 'Mobile number', icon: Icons.phone_outlined),
                 keyboardType: TextInputType.phone,
+                inputFormatters: FormValidators.phoneInputFormatters,
                 validator: (v) =>
                     FormValidators.lenientPhone(v, required: true),
               ),
@@ -1021,17 +1037,17 @@ class _DocumentsStepState extends State<_DocumentsStep> {
   Future<void> _handleSubmit() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Submit for Approval?'),
         content: const Text(
           'Once submitted, your profile will be reviewed by HR. You cannot make changes after submission.',
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () => Navigator.pop(dialogContext, false),
               child: const Text('Cancel')),
           FilledButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () => Navigator.pop(dialogContext, true),
               child: const Text('Submit')),
         ],
       ),

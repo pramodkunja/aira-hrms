@@ -6,7 +6,6 @@ class CompanyModel {
   final String companyName;
   final String tradeName;
   final String? logoUrl;
-  final String gstin;
   final String cin;
   final String pan;
   final String tan;
@@ -23,7 +22,6 @@ class CompanyModel {
     required this.companyName,
     required this.tradeName,
     this.logoUrl,
-    required this.gstin,
     required this.cin,
     required this.pan,
     required this.tan,
@@ -38,7 +36,7 @@ class CompanyModel {
 
   factory CompanyModel.empty() => const CompanyModel(
     companyName: '', tradeName: '',
-    gstin: '', cin: '', pan: '', tan: '',
+    cin: '', pan: '', tan: '',
     address: '', city: '', state: '', pinCode: '',
     website: '', officialPhone: '',
   );
@@ -48,7 +46,6 @@ class CompanyModel {
     companyName:   json['company_name'] as String? ?? '',
     tradeName:     json['trade_name'] as String? ?? '',
     logoUrl:       json['logo_url'] as String?,
-    gstin:         json['gstin'] as String? ?? '',
     cin:           json['cin'] as String? ?? '',
     pan:           json['pan'] as String? ?? '',
     tan:           json['tan'] as String? ?? '',
@@ -64,7 +61,6 @@ class CompanyModel {
   Map<String, dynamic> toJson() => {
     'company_name':   companyName,
     'trade_name':     tradeName,
-    'gstin':          gstin,
     'cin':            cin,
     'pan':            pan,
     'tan':            tan,
@@ -81,7 +77,6 @@ class CompanyModel {
     String? companyName,
     String? tradeName,
     String? logoUrl,
-    String? gstin,
     String? cin,
     String? pan,
     String? tan,
@@ -97,7 +92,6 @@ class CompanyModel {
     companyName:   companyName ?? this.companyName,
     tradeName:     tradeName ?? this.tradeName,
     logoUrl:       logoUrl ?? this.logoUrl,
-    gstin:         gstin ?? this.gstin,
     cin:           cin ?? this.cin,
     pan:           pan ?? this.pan,
     tan:           tan ?? this.tan,

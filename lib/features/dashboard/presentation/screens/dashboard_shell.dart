@@ -6,14 +6,16 @@ import 'package:mobile_app/core/router/app_router.dart';
 import 'package:mobile_app/core/theme/app_colors.dart';
 import 'package:mobile_app/core/theme/theme_mode_provider.dart';
 import 'package:mobile_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:mobile_app/shared/widgets/app_dialog.dart';
 import '../navigation/nav_config.dart';
-import '../widgets/app_sidebar.dart';
+import '../widgets/app_bottom_nav.dart';
 import '../widgets/app_top_bar.dart';
 
 /// Shell that wraps every /dashboard/* route via GoRouter's ShellRoute.
 ///
 /// Responsibilities:
-///   - Scaffold with persistent Drawer (sidebar) and AppTopBar
+///   - Scaffold with the persistent bottom nav (Home/Menu/Profile) and,
+///     on every route except Home, the shared AppTopBar
 ///   - Renders the current route's page as [child]
 ///   - Navigates to /login when the user logs out
 class DashboardShell extends ConsumerStatefulWidget {
@@ -78,18 +80,23 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
       child: Scaffold(
         key: _scaffoldKey,
         backgroundColor: AppColors.background,
-        drawer: const AppSidebar(),
-        appBar: AppTopBar(
-          title: title,
-          // Every route except the Dashboard home screen gets the blue app
-          // bar theme — Dashboard keeps its original plain white bar.
-          isBlueTheme: currentPath != AppRoutes.dashboard,
-          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
-          onThemeToggleTap: () => ref.read(themeModeProvider.notifier).toggle(),
-          isDarkMode: isDarkMode,
-          onLogoutTap: _handleLogout,
-        ),
-        body: widget.child,
+        // Home renders its own slim DashboardHeader (avatar/greeting/bell)
+        // instead of this shared bar — every other /dashboard/* route keeps
+        // it exactly as before. The hamburger that used to live in AppTopBar
+        // was removed: Menu is reached from AppBottomNav's own center button
+        // on every screen, so a second entry point in the app bar was just a
+        // duplicate control now that navigation lives in the bottom bar.
+        appBar: currentPath == AppRoutes.dashboard
+            ? null
+            : AppTopBar(
+                title: title,
+                isBlueTheme: true,
+                onThemeToggleTap: () => ref.read(themeModeProvider.notifier).toggle(),
+                isDarkMode: isDarkMode,
+                onLogoutTap: _handleLogout,
+              ),
+        body: SafeArea(top: currentPath == AppRoutes.dashboard, bottom: false, child: widget.child),
+        bottomNavigationBar: AppBottomNav(currentPath: currentPath),
       ),
     );
   }
@@ -105,24 +112,13 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
       context.go(AppRoutes.dashboard);
       return;
     }
-    final shouldExit = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Exit Application?'),
-        content: const Text('Are you sure you want to exit?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Exit'),
-          ),
-        ],
-      ),
+    final shouldExit = await AppDialog.confirm(
+      context,
+      title: 'Exit Application?',
+      message: 'Are you sure you want to exit?',
+      confirmLabel: 'Exit',
     );
-    if (shouldExit == true) {
+    if (shouldExit) {
       SystemNavigator.pop();
     }
   }

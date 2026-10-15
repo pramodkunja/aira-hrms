@@ -218,14 +218,18 @@ class SettingsRemoteDataSource {
     );
   }
 
-  // ── Departments ────────────────────────────────────────────────────────────
+  // ── Departments (Org Structure units marked is_department_level) ───────────
+  // GET returns the whole org tree, not just department-level units — the
+  // web app filters the same way (useDepartmentOptions.ts).
 
   Future<List<DepartmentModel>> fetchDepartments() async {
     final res = await _dio
         .get(ApiConstants.departments, queryParameters: {'page_size': 200});
     final data = _unwrap(res.data);
     return _toList(data)
-        .map((e) => DepartmentModel.fromJson(e as Map<String, dynamic>))
+        .cast<Map<String, dynamic>>()
+        .where((json) => json['is_department_level'] == true)
+        .map(DepartmentModel.fromJson)
         .toList();
   }
 
@@ -234,13 +238,16 @@ class SettingsRemoteDataSource {
     return DepartmentModel.fromJson(_unwrap(res.data) as Map<String, dynamic>);
   }
 
-  Future<DepartmentModel> updateDepartment(int id, DeptFormData form) async {
+  Future<DepartmentModel> updateDepartment(String id, DeptFormData form) async {
     final res =
         await _dio.put(ApiConstants.departmentDetail(id), data: form.toJson());
     return DepartmentModel.fromJson(_unwrap(res.data) as Map<String, dynamic>);
   }
 
-  Future<void> deleteDepartment(int id) async {
+  // The backend rejects this with a 409 (surfaced via the normal error
+  // message) if the unit has sub-units or any position ever held by
+  // someone — deactivate it from Org Chart instead in that case.
+  Future<void> deleteDepartment(String id) async {
     await _dio.delete(ApiConstants.departmentDetail(id));
   }
 
@@ -399,13 +406,14 @@ class SettingsRemoteDataSource {
   }
 
   Future<DesignationModel> updateDesignation(
-      int id, DesignationFormData form) async {
+      String id, DesignationFormData form) async {
     final res =
         await _dio.put(ApiConstants.designationDetail(id), data: form.toJson());
     return DesignationModel.fromJson(_unwrap(res.data) as Map<String, dynamic>);
   }
 
-  Future<void> deleteDesignation(int id) async {
+  // See deleteDepartment's doc comment — same 409-on-history behavior.
+  Future<void> deleteDesignation(String id) async {
     await _dio.delete(ApiConstants.designationDetail(id));
   }
 

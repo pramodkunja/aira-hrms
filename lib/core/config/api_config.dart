@@ -56,7 +56,7 @@ class ApiConfig {
   // reconnecting to Wi-Fi).
   static const String localBaseUrlWeb = 'http://localhost:8000/api';
   static const String localBaseUrlNative = 'http://192.168.0.106:8000/api';
-  static const String productionBaseUrl = 'http://aira.nxsys.in/api/';
+  static const String productionBaseUrl = 'https://aira.nxsys.in/api/';
 
   /// The active base URL for [current]. This is the only place the app
   /// resolves which backend to talk to.

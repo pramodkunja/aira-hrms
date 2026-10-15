@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/validators/form_validators.dart';
 import '../../../../shared/widgets/app_error_state.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -39,9 +38,46 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   bool _saving = false;
   bool _changingPassword = false;
+  String? _emergencyPhoneError;
+  String? _emergencyEmailError;
+
+  void _onEmergencyPhoneChanged(String value) {
+    final error = FormValidators.lenientPhone(value);
+    if (error != _emergencyPhoneError) setState(() => _emergencyPhoneError = error);
+  }
+
+  void _onEmergencyEmailChanged(String value) {
+    final trimmed = value.trim();
+    final error = trimmed.isEmpty ? null : FormValidators.email(trimmed);
+    if (error != _emergencyEmailError) setState(() => _emergencyEmailError = error);
+  }
   // Tracks which profile.id the controllers were last populated from, so we
   // don't clobber in-progress edits on every provider rebuild.
   String? _hydratedForId;
+
+  // Anchors for the module grid's "jump to section" tiles — every section
+  // still renders in place below, tapping a tile just scrolls to it rather
+  // than navigating anywhere new.
+  final _personalKey = GlobalKey();
+  final _separationKey = GlobalKey();
+  final _addressKey = GlobalKey();
+  final _educationKey = GlobalKey();
+  final _bankKey = GlobalKey();
+  final _emergencyKey = GlobalKey();
+  final _passwordKey = GlobalKey();
+  final _faceIdKey = GlobalKey();
+  final _documentsKey = GlobalKey();
+
+  void _scrollToSection(GlobalKey key) {
+    final ctx = key.currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOut,
+      alignment: 0.05,
+    );
+  }
 
   @override
   void dispose() {
@@ -102,13 +138,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
     setState(() => _saving = true);
     final data = MyProfileUpdateData(
-      phone: _phoneCtrl.text,
-      currentAddress: _currentAddressCtrl.text,
-      permanentAddress: _permanentAddressCtrl.text,
-      emergencyName: _emergencyNameCtrl.text,
-      emergencyRelationship: _emergencyRelationshipCtrl.text,
-      emergencyPhone: _emergencyPhoneCtrl.text,
-      emergencyEmail: _emergencyEmailCtrl.text,
+      phone: _phoneCtrl.text.trim(),
+      currentAddress: _currentAddressCtrl.text.trim(),
+      permanentAddress: _permanentAddressCtrl.text.trim(),
+      emergencyName: _emergencyNameCtrl.text.trim(),
+      emergencyRelationship: _emergencyRelationshipCtrl.text.trim(),
+      emergencyPhone: _emergencyPhoneCtrl.text.trim(),
+      emergencyEmail: _emergencyEmailCtrl.text.trim(),
     );
     final err = await ref.read(myProfileProvider.notifier).updateProfile(data);
     if (!mounted) return;
@@ -201,46 +237,144 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               onRefresh: () => ref.read(myProfileProvider.notifier).refresh(),
               child: CustomScrollView(
                 slivers: [
-                  SliverToBoxAdapter(child: _header()),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
                       child: Column(
                         children: [
-                          ProfilePersonalSection(
+                          ProfileSummaryCard(
                             profile: profile,
                             phoneCtrl: _phoneCtrl,
+                            saving: _saving,
+                            onSave: _onSave,
+                          ),
+                          const SizedBox(height: 22),
+                          const ProfileSectionHeader(
+                            title: 'Personal Information',
+                            icon: Icons.badge_outlined,
                           ),
                           const SizedBox(height: 16),
-                          const ProfileSeparationSection(),
-                          const SizedBox(height: 16),
-                          ProfileAddressSection(
-                            currentAddressCtrl: _currentAddressCtrl,
-                            permanentAddressCtrl: _permanentAddressCtrl,
+                          ProfileModuleGrid(
+                            tiles: [
+                              ProfileModuleTile(
+                                label: 'Address',
+                                icon: Icons.contact_page_outlined,
+                                color: AppColors.accentNavy,
+                                onTap: () => _scrollToSection(_addressKey),
+                              ),
+                              ProfileModuleTile(
+                                label: 'Personal Details',
+                                icon: Icons.assignment_ind_outlined,
+                                color: AppColors.primary,
+                                onTap: () => _scrollToSection(_personalKey),
+                              ),
+                              ProfileModuleTile(
+                                label: 'Education & Experience',
+                                icon: Icons.school_outlined,
+                                color: AppColors.primary,
+                                onTap: () => _scrollToSection(_educationKey),
+                              ),
+                              ProfileModuleTile(
+                                label: 'Bank Details',
+                                icon: Icons.account_balance_outlined,
+                                color: AppColors.accentNavy,
+                                onTap: () => _scrollToSection(_bankKey),
+                              ),
+                              ProfileModuleTile(
+                                label: 'Emergency Contact',
+                                icon: Icons.local_phone_outlined,
+                                color: AppColors.primary,
+                                onTap: () => _scrollToSection(_emergencyKey),
+                              ),
+                              ProfileModuleTile(
+                                label: 'Change Password',
+                                icon: Icons.lock_outline,
+                                color: AppColors.accentNavy,
+                                onTap: () => _scrollToSection(_passwordKey),
+                              ),
+                              ProfileModuleTile(
+                                label: 'Face ID',
+                                icon: Icons.face_outlined,
+                                color: AppColors.primary,
+                                onTap: () => _scrollToSection(_faceIdKey),
+                              ),
+                              ProfileModuleTile(
+                                label: 'Documents',
+                                icon: Icons.folder_outlined,
+                                color: AppColors.accentNavy,
+                                onTap: () => _scrollToSection(_documentsKey),
+                              ),
+                              ProfileModuleTile(
+                                label: 'Separation',
+                                icon: Icons.logout_outlined,
+                                color: AppColors.primary,
+                                onTap: () => _scrollToSection(_separationKey),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                          KeyedSubtree(
+                            key: _personalKey,
+                            child: ProfilePersonalDetailsSection(profile: profile),
                           ),
                           const SizedBox(height: 16),
-                          ProfileEducationSection(profile: profile),
-                          const SizedBox(height: 16),
-                          ProfileBankSection(profile: profile),
-                          const SizedBox(height: 16),
-                          ProfileEmergencySection(
-                            nameCtrl: _emergencyNameCtrl,
-                            relationshipCtrl: _emergencyRelationshipCtrl,
-                            phoneCtrl: _emergencyPhoneCtrl,
-                            emailCtrl: _emergencyEmailCtrl,
+                          KeyedSubtree(
+                            key: _separationKey,
+                            child: const ProfileSeparationSection(),
                           ),
                           const SizedBox(height: 16),
-                          ProfileChangePasswordSection(
-                            currentCtrl: _curPassCtrl,
-                            newCtrl: _newPassCtrl,
-                            confirmCtrl: _cfmPassCtrl,
-                            loading: _changingPassword,
-                            onSubmit: _onChangePassword,
+                          KeyedSubtree(
+                            key: _addressKey,
+                            child: ProfileAddressSection(
+                              currentAddressCtrl: _currentAddressCtrl,
+                              permanentAddressCtrl: _permanentAddressCtrl,
+                            ),
                           ),
                           const SizedBox(height: 16),
-                          const ProfileFaceIdSection(),
+                          KeyedSubtree(
+                            key: _educationKey,
+                            child: ProfileEducationSection(profile: profile),
+                          ),
                           const SizedBox(height: 16),
-                          const ProfileDocumentsSection(),
+                          KeyedSubtree(
+                            key: _bankKey,
+                            child: ProfileBankSection(profile: profile),
+                          ),
+                          const SizedBox(height: 16),
+                          KeyedSubtree(
+                            key: _emergencyKey,
+                            child: ProfileEmergencySection(
+                              nameCtrl: _emergencyNameCtrl,
+                              relationshipCtrl: _emergencyRelationshipCtrl,
+                              phoneCtrl: _emergencyPhoneCtrl,
+                              emailCtrl: _emergencyEmailCtrl,
+                              phoneError: _emergencyPhoneError,
+                              emailError: _emergencyEmailError,
+                              onPhoneChanged: _onEmergencyPhoneChanged,
+                              onEmailChanged: _onEmergencyEmailChanged,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          KeyedSubtree(
+                            key: _passwordKey,
+                            child: ProfileChangePasswordSection(
+                              currentCtrl: _curPassCtrl,
+                              newCtrl: _newPassCtrl,
+                              confirmCtrl: _cfmPassCtrl,
+                              loading: _changingPassword,
+                              onSubmit: _onChangePassword,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          KeyedSubtree(
+                            key: _faceIdKey,
+                            child: const ProfileFaceIdSection(),
+                          ),
+                          const SizedBox(height: 16),
+                          KeyedSubtree(
+                            key: _documentsKey,
+                            child: const ProfileDocumentsSection(),
+                          ),
                         ],
                       ),
                     ),
@@ -255,50 +389,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             onRetry: () => ref.invalidate(myProfileProvider),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _header() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('My Profile', style: AppTextStyles.h4),
-                const SizedBox(height: 2),
-                Text(
-                  'View and update your personal information',
-                  style: AppTextStyles.caption.copyWith(fontSize: 11),
-                ),
-              ],
-            ),
-          ),
-          FilledButton.icon(
-            onPressed: _saving ? null : _onSave,
-            icon: _saving
-                ? const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation(Colors.white),
-                    ),
-                  )
-                : const Icon(Icons.save_outlined, size: 15),
-            label: Text(_saving ? 'Saving…' : 'Save Changes'),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              textStyle: AppTextStyles.bodySmall
-                  .copyWith(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
       ),
     );
   }
